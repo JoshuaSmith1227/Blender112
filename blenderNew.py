@@ -48,7 +48,17 @@ def onAppStart(app):
     app.rotate = False
     app.boxSelect = False
 
-    app.controlButtons = getControlButtons(app)
+    app.modeStates = {
+                'Object': True,
+                'Edit': False,
+                'Sculpt': False,
+                    }
+
+    app.sideButtons = getControlButtons(app)
+    app.dropDownButtons = getDropDownButtons(app)
+
+    app.controlButtons = app.sideButtons + app.dropDownButtons
+    
     app.selectedButton = None
     app.hoveredButton = None
 
@@ -64,11 +74,13 @@ def onAppStart(app):
     app.drawDottedLine = False
     app.keyPress = False
     app.grab = False
-
+    app.showMeshWindow = False
+    app.keys = []
 
 
     
 def onKeyHold(app, keys):
+    app.keys = keys
     vForward = vectorMultiply(app.camera.lookDir, .3)
     vRight = vectorMultiply(getNormalVector(app.camera.lookDir, app.camera.up), .3)
 
@@ -93,6 +105,12 @@ def onKeyHold(app, keys):
         app.camera.cameraPos[1] += .3
         app.camera.target[1] += .3
 
+    if('tab' in keys):
+        app.modeStates['Edit'] = True
+        app.modeStates['Object'] = False
+        app.modeStates['Sculpt'] = False
+        app.currentMode.url = getCurrentMode(app)
+
     if(app.selectedMeshIndex != None):
         if('r' in keys):
             app.drawDottedLine = True
@@ -111,7 +129,7 @@ def onKeyHold(app, keys):
             app.scale = False
             app.selectedButton = 'selectedMove.png'
             app.keyPress = True
-        
+
     if( app.selectedButton == 'SelectedScale.png' or app.selectedButton == 'selectedMove.png'):
         if('x' in keys):
             app.keyPress = True
@@ -169,7 +187,6 @@ def updateControls(app):
 
 
 def controlButtonPressed(app, mx, my):   
-    #app.selectedButton = None
     for button in app.controlButtons:
         if(button.hovered(mx, my)):
             button.url = button.ogPressed
@@ -193,6 +210,15 @@ def selectMesh(app, mx, my):
         if( selectedMesh(app, app.meshList[i], mx, my) ):
             app.selectedMeshIndex = i   
 
+def drawDropDownMenus(app, mx, my):
+    for b in app.dropDownButtons:
+        if(b.hovered(mx, my)):
+            b.drawDropDown = True
+
+def getRidOfDropDownMenu(app, mx, my):
+    for b in app.dropDownButtons:
+        if(not b.dropDownHovered(mx, my) and b.drawDropDown):
+            b.drawDropDown = False
 
 def moveScaleRotateHovered(app, mx, my):
     foundButton = False
@@ -216,10 +242,14 @@ def moveScaleRotateHovered(app, mx, my):
 
 
 def ableToDeselect(app, mx, my):
-    if(not moveScaleRotateHovered(app, mx, my) ):
-        if( not(15 <= mx <= 54 and 140 <= my <= 236+40) ):
-            return True
-    return False
+    if(moveScaleRotateHovered(app, mx, my) ):
+        return False
+    
+    for b in app.controlButtons:
+        if(b.hovered(mx, my)):
+            return False
+
+    return True
 
 def transformMoveScaleRotate(app, mx, my):
     if(app.move):
@@ -262,6 +292,7 @@ def initiazliseMoveScaleRotate(app):
 
 
 def onMouseMove(app, mx, my):
+    getRidOfDropDownMenu(app, mx, my)
     if(app.keyPress):
         app.mx = mx
         app.my = my
@@ -275,6 +306,7 @@ def onMouseMove(app, mx, my):
 
 def onMousePress(app, mx, my, button):
     app.drawDottedLine = False
+    drawDropDownMenus(app, mx, my)
     initializeCameraMove(app, mx, my)
     initiazliseMoveScaleRotate(app)
     controlButtonPressed(app, mx, my) 
@@ -299,11 +331,14 @@ def onMouseRelease(app, mx, my):
     app.mx = 0
     app.my = 0
 
+def onKeyRelease(app, key):
+    app.keys = []
+
 def redrawAll(app):    
     drawRect(0, 0, app.width, app.height, fill = rgb(30, 30, 30))
     drawBetterRect(app, 15, 25, app.width-30, app.height-20, rgb(60, 60, 60), 13)
-    drawLabel(app.selectedButton, 300, 100, fill = 'white')
-    drawLabel(app.hoveredButton, 300, 120, fill = 'white')
+    drawLabel(app.selectedButton, 700, 100, fill = 'white')
+    drawLabel(app.hoveredButton, 700, 120, fill = 'white')
     drawGrid(app)
     for i in range(len(app.meshList)):
         draw3DShape(app, app.meshList[i], i)
@@ -312,6 +347,7 @@ def redrawAll(app):
 
     drawWorldOrigin()
     drawControlButtons(app)
+    
     drawControlDetails(app)
     if(app.drawDottedLine):
         startPoint = vectorSubtract(app.meshList[app.selectedMeshIndex].translateList, app.meshList[app.selectedMeshIndex].rotationPoint)
@@ -319,6 +355,9 @@ def redrawAll(app):
         midpoint = point(startPoint, app.camera).getTransformedPoints()
         drawLine(app.movedMx, app.movedMy, midpoint[0], midpoint[1], dashes = True , arrowStart = True)
     drawSelectedAxisLines(app)
+
+    drawLabel(' '.join(app.keys), 100, app.height-100, fill = 'white', size = 30)
+    drawDropDowns(app)
     if(app.boxSelect):
         drawLine(app.mx, app.my, app.draggedMx, app.my, fill = 'white', dashes = True)
         drawLine(app.mx, app.my, app.mx, app.draggedMy, fill = 'white', dashes = True)

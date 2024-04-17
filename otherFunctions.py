@@ -44,7 +44,6 @@ def chooseMesh(s):
     three = [-.5, .5, -.5]
     four = [.5, .5, -.5]
     five   = [0, 1.3, 0]
-    #to change origin add a constant to all the points 
     
     pyramid = [
         [three, two, one],
@@ -80,7 +79,7 @@ def chooseMesh(s):
             [(1, 0, 1), (0, 0, 1), (0, 0, 0)], 
             [(1, 0, 1), (0, 0, 0), (1, 0, 0)], 
         ]
-    monkey = extractPoints("C:\\Users\Owner\\Downloads\\Monkey2.obj")
+    monkey = extractPoints("C:\\Users\\Owner\\Downloads\\Monkey2.obj")
     cylindar = extractPoints("C:\\Users\\Owner\\Downloads\\CylindarTest.obj")
     sphere = extractPoints("C:\\Users\\Owner\\Downloads\\Sphere2.obj")
     chicken = extractPoints("C:\\Users\Owner\\Downloads\\Low Poly Chicken.obj")
@@ -298,3 +297,12 @@ def drawBetterRect(app, x, y, width, height, color, borderWidth, o = 100):
     drawRect(x, y-borderWidth, width, height+(2*borderWidth), fill = color, opacity = o)
     drawRect(x-borderWidth, y, width+(2*borderWidth), height, fill = color, opacity = o)
     drawRect(x, y, width, height, fill = color, opacity = o)
+
+def getCurrentMode(app):
+    for e in app.modeStates:
+        if(app.modeStates[e] and e == 'Object'):
+            return app.imageStorage.objectModeIcon
+        elif(app.modeStates[e] and e == 'Edit'):
+            return app.imageStorage.editModeIcon
+        elif(app.modeStates[e] and e == 'Sculpt'):
+            return app.imageStorage.scluptModeIcon

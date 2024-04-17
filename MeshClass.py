@@ -201,7 +201,7 @@ class Mesh:
             else:
                 self.hiddenTris.append(newTri)
         
-        self.frontTris =  sortMeshData(self.frontTris)
+        self.frontTris = sortMeshData(self.frontTris)
         return (self.frontTris, self.hiddenTris)
 
     def mutatePoint(self, tri):
