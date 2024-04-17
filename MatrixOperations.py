@@ -137,36 +137,6 @@ def intersectPlane(point, planeNormal, lineStart, lineEnd):
     return vectorAdd(lineStart, lineIntersect)
 
 
-def triangleClip(point, triangle, planeNormal):
-    planeNormal = convertToUnitVector(planeNormal)
-    insidePoints = []
-    outsidePoints = []
-    d1 = planePointDist(triangle[0], planeNormal)
-    d2 = planePointDist(triangle[1], planeNormal)
-    d3 = planePointDist(triangle[2], planeNormal)
-    distList = [d1, d2, d3]
-    for dist in distList:
-        if(dist >= 0):
-            insidePoints.append(dist)
-        else:
-            outsidePoints.append(dist)
-
-    if(len(insidePoints) == 0):
-        return 0
-    elif(len(insidePoints) == 3):
-        return 1
-    elif(len(insidePoints) == 1 and len(outsidePoints) == 2):
-        p1 = insidePoints[0]
-        p2 = intersectPlane(point, planeNormal, p1, outsidePoints[0])
-        p3 = intersectPlane(point, planeNormal, p1, outsidePoints[1])
-        return 1
-    elif(len(insidePoints) == 2 and len(outsidePoints) == 1):
-        p1 = insidePoints[0]
-        p2 = insidePoints[1]
-        p3 = intersectPlane(point, planeNormal, p2, outsidePoints[0])
-        return 2
-
-
 def planePointDist(point, plane):
     point = convertToUnitVector(point)
     return plane[0]*point[0] + plane[1]*point[1] + plane[2]*point[2] - dotProductNoCamera(plane, point)

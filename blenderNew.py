@@ -25,7 +25,7 @@ def onAppStart(app):
     app.worldPivot = [.5, .5, .5]
     app.camera = Camera(app.cameraPos, [0, 0, 0], [0, 1, 0])
     
-    app.testMesh = Mesh( chooseMesh('pyramid'), 'cube', app.camera, app.worldPivot)
+    app.testMesh = Mesh( chooseMesh('cube'), 'cube', app.camera, app.worldPivot)
     app.testMesh2 = Mesh( chooseMesh('pyramid'), 'pyramid', app.camera, app.worldPivot)
 
     app.testMesh.zTrans = 0
