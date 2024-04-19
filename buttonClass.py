@@ -1,15 +1,21 @@
 from cmu_graphics import *
 
 class button:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, name = None):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.isHovered = False
+        self.name = name
     
     def __repr__(self):
-        return f'Button at ({self.x}, {self.y})'
+        return f'Button: {self.name}'
+    
+    def __eq__(self, other):
+        if(isinstance(other, button)):
+            return self.name == other.name
+        return False
 
     def hovered(self, mx, my):
         if(self.x <= mx <= self.x+self.width and self.y <= my <= self.y+self.height):
@@ -82,7 +88,7 @@ class Picture(button):
 #=================================================================================== 
 
 class DropDown(button):
-    def __init__(self, url, x, y, width, height, dropDownImage):
+    def __init__(self, url, x, y, width, height, dropDownImage, name = None, buttonWdith = None, buttonHeight = None):
         super().__init__(x, y, width, height)
         self.url = url
         self.dropDownImage = dropDownImage
@@ -90,12 +96,20 @@ class DropDown(button):
 
         self.ogURL = url
         self.ogPressed = url
+
+        self.name = name
+        self.buttonWidth = buttonWdith
+        self.buttonHeight = buttonHeight
     
     def __repr__(self):
-        return f'{self.url[38:]}'
+        if(self.url != None):
+            return f'{self.url[38:]}'
+        else:
+            return self.name
 
     def dropDownHovered(self, mx, my):
-        if(self.x <= mx <= self.x + getImageSize(self.dropDownImage)[0] and self.y <= my <= self.y + getImageSize(self.dropDownImage)[1]):
+
+        if(self.x <= mx <= self.x + getImageSize(self.dropDownImage)[0] and self.y + self.height <= my <= self.y + getImageSize(self.dropDownImage)[1] or self.hovered(mx, my)):
             return True
         return False
     

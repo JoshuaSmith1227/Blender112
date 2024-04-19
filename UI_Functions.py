@@ -53,6 +53,15 @@ class imageStorage:
         self.objectEditSculpt = "C:\\Users\\Owner\\Downloads\\blenderIcons\\ObjectEditSculptIcon.png"
         self.objectEditSculptSize = getImageSize(self.objectEditSculpt)
 
+        self.meshSelect = "C:\\Users\\Owner\\Downloads\\blenderIcons\\MeshSelect.png"
+        self.meshSelectSize = getImageSize(self.meshSelect)
+
+        self.select = "C:\\Users\\Owner\\Downloads\\blenderIcons\\Select.png"
+        self.selectSize = getImageSize(self.select)
+
+        self.view = "C:\\Users\\Owner\\Downloads\\blenderIcons\\View.png"
+        self.viewSize = getImageSize(self.view)
+
 
 
 def getControlButtons(app):
@@ -64,22 +73,32 @@ def getControlButtons(app):
     box = Picture(app.imageStorage.boxIcon, 15, 25+dy, app.imageStorage.boxSize[0]/.85, app.imageStorage.boxSize[1]/.9, app.imageStorage.pressedBoxIcon)
     cursor = Picture(app.imageStorage.cursorIcon, 16, 60+dy, app.imageStorage.cursorSize[0]/.8, app.imageStorage.cursorSize[1]/.9, app.imageStorage.pressedCursorIcon)
     
-    editorIcon = Picture(app.imageStorage.editorTypeIcon, 16, 20, app.imageStorage.editorTypeSize[0]/1.3, app.imageStorage.editorTypeSize[1]/1.3, app.imageStorage.editorTypeIcon)
+    editorIcon = Picture(app.imageStorage.editorTypeIcon, 16, 25, app.imageStorage.editorTypeSize[0]/1.3, app.imageStorage.editorTypeSize[1]/1.3, app.imageStorage.editorTypeIcon)
     app.currentMode = Picture(getCurrentMode(app), 60, 20, app.imageStorage.objectModeSize[0]/1.3,app.imageStorage.objectModeSize[1]/1.3, getCurrentMode(app))
 
     return [move, scale, rotate, transform, box, cursor, editorIcon]
 
 def getDropDownButtons(app):
-    editorMode = DropDown(getCurrentMode(app), 60, 20, app.imageStorage.objectModeSize[0]/1.3, app.imageStorage.objectModeSize[1]/1.3, app.imageStorage.objectEditSculpt)
 
-    return [editorMode]
+    editorMode = DropDown(getCurrentMode(app), 60, 25, app.imageStorage.objectModeSize[0]/1.3, app.imageStorage.objectModeSize[1]/1.3, app.imageStorage.objectEditSculpt)
+    MeshButtonList = [button(320, 55, app.imageStorage.meshSelectSize[0], app.imageStorage.meshSelectSize[1]/10)]
+    addMesh = DropDown(None, 320, 25, 30, 20, app.imageStorage.meshSelect, 'Add')
+    view = DropDown(None, 260, 25, 30, 20, app.imageStorage.view, 'view')
+    select = DropDown(None, 200, 25, 35, 20, app.imageStorage.select, 'select')
+    return [editorMode, addMesh, view, select]
 
 def drawDropDowns(app):
     for b in app.dropDownButtons:
-        drawImage(b.url, b.x, b.y, width = b.width, height = b.height)
+        if(b.url != None):
+            drawImage(b.url, b.x, b.y, width = b.width, height = b.height)
+        else:
+            drawBetterRect(app, b.x, b.y, b.width, b.height, rgb(65, 65, 65), 3)
+            drawLabel(b.name, b.x+b.width/2, b.y+b.height/2, fill = 'white')
         if(b.drawDropDown):
             drawImage(b.dropDownImage, b.x, b.y + b.height, width = getImageSize(b.dropDownImage)[0]/1.3, height = getImageSize(b.dropDownImage)[1]/1.3 )
             drawRect(b.x, b.y, b.width, b.height, fill = rgb(60, 81, 88), opacity = 30 )
+
+
 
 def updateMoveScaleRotateButtons(app):
     if(app.selectedMeshIndex != None):
@@ -91,17 +110,16 @@ def updateMoveScaleRotateButtons(app):
 
 def drawControlButtons(app):
     for button in app.controlButtons:
-        drawImage(button.url, button.x, button.y, width = button.width, height = button.height)
+        if(isinstance(button, Picture)):
+            drawImage(button.url, button.x, button.y, width = button.width, height = button.height)
+        elif(isinstance(button, DropDown)):
+            drawBetterRect(app, button.x, button.y, button.width, button.height, rgb(40, 40, 40), 3)
+        else:
+            drawBetterRect(app, button.x, button.y, button.width, button.height, rgb(50, 50, 50), 3)
+            drawLabel(button.name, button.x+button.width/2, button.y+button.height/2, fill = 'white')
+        
 
 def drawControlDetails(app):
-    dx = 35
-    drawLabel('User Perspective', 70, 70, fill = 'white', align = 'left', size = 12)
-    drawLabel('(1) Scene Collection | Cube', 70, 90, fill = 'white', align = 'left', size = 12)
-    drawLabel('View', 200, 30, fill = 'white', size = 12)
-    drawLabel('Select', 200+dx, 30, fill = 'white', size = 12)
-    drawLabel('Add', 200+dx*2, 30, fill = 'white', size = 12)
-    drawLabel('Object', 200+dx*3, 30, fill = 'white', size = 12)
-
     if(app.hoveredButton != None):
         drawRect(app.hoveredButton.x, app.hoveredButton.y, app.hoveredButton.width, app.hoveredButton.height, fill = rgb(60, 60, 60), opacity = 30)
 

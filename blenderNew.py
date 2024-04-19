@@ -189,11 +189,13 @@ def updateControls(app):
 def controlButtonPressed(app, mx, my):   
     for button in app.controlButtons:
         if(button.hovered(mx, my)):
-            button.url = button.ogPressed
+            if(isinstance(button, Picture)):
+                button.url = button.ogPressed
             app.selectedButton = button
         else:
             if(15 <= mx <= 54 and 25+40 <= my <= 236+40):
-                button.url = button.ogURL
+                if(isinstance(button, Picture)):
+                    button.url = button.ogURL
 
 def controlButtonHovered(app, mx, my):
     app.hoveredButton = None
@@ -347,8 +349,8 @@ def redrawAll(app):
 
     drawWorldOrigin()
     drawControlButtons(app)
-    
-    drawControlDetails(app)
+    drawLabel('User Perspective', 70, 70, fill = 'white', align = 'left', size = 12)
+    drawLabel('(1) Scene Collection | Cube', 70, 90, fill = 'white', align = 'left', size = 12)
     if(app.drawDottedLine):
         startPoint = vectorSubtract(app.meshList[app.selectedMeshIndex].translateList, app.meshList[app.selectedMeshIndex].rotationPoint)
         startPoint[1] += 1
@@ -363,7 +365,8 @@ def redrawAll(app):
         drawLine(app.mx, app.my, app.mx, app.draggedMy, fill = 'white', dashes = True)
         drawLine(app.draggedMx, app.draggedMy, app.draggedMx, app.my, fill = 'white', dashes = True)
         drawLine(app.mx, app.draggedMy, app.draggedMx, app.draggedMy, fill = 'white', dashes = True)
-        
+    drawControlDetails(app)    
+
 def onStep(app):
     makeGrid(app)
     app.testMesh.initializeTransforms()
