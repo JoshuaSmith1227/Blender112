@@ -19,8 +19,9 @@ class Mesh:
         self.name = name
 
         self.xTrans = 0
-        self.yTrans = 0
+        self.yTrans = 1
         self.zTrans = 0
+        self.translateList = [self.xTrans, self.yTrans, self.zTrans]
 
         self.xAngle = 0
         self.yAngle = 0
@@ -31,10 +32,9 @@ class Mesh:
         self.zScale = 1
 
         self.lightingVector = [0, 0, -1]
-
         self.rotationPoint = self.getMidpoint()
 
-        self.worldPivot = self.rotationPoint
+        self.worldPivot = worldPivot
                 
         self.initializeConstants()
         self.initializeTransforms()
@@ -66,7 +66,7 @@ class Mesh:
             xT = 0
             yT = 0
             zT = 0
-
+            self.worldPivot = vectorAdd(app.worldPivot, self.rotationPoint)
             # Translate to new Origin ===========================================================
             translatedToRotationPointP1 = self.translate(triangle[0], -self.rotationPoint[0], -self.rotationPoint[1], -self.rotationPoint[2])
             translatedToRotationPointP2 = self.translate(triangle[1], -self.rotationPoint[0], -self.rotationPoint[1], -self.rotationPoint[2])
@@ -103,8 +103,7 @@ class Mesh:
             worldPivotPoint2 = self.translate( rotatedP2X, -self.worldPivot[0], -self.worldPivot[1], -self.worldPivot[2])
             worldPivotPoint3 = self.translate( rotatedP3X, -self.worldPivot[0], -self.worldPivot[1], -self.worldPivot[2])
             #=========================================================================================
-            
-            
+                     
             self.mutatePoint([worldPivotPoint1, worldPivotPoint2, worldPivotPoint3])
             self.translateList = [self.xTrans, self.yTrans, self.zTrans]
 
@@ -293,12 +292,20 @@ class point:
     def getTransformedPoints(self):
         finalPoints = []
         for point in [self.points]:
-            #worldPivotPoint = self.translate( point, -self.worldPivot[0], -self.worldPivot[1], -self.worldPivot[2])
-            zRotated = matrixMultiply(point, 0, 0, 0, self.camera.getCameraZRotation())
+            if(app.selectedMeshIndex != None):
+                self.worldPivot = vectorSubtract(app.worldPivot, [0, 0, 0])
+                #self.worldPivot = vectorSubtract(app.worldPivot, app.meshList[app.selectedMeshIndex].rotationPoint)
+            else:
+                self.worldPivot = vectorSubtract(app.worldPivot, [0, 0, 0])
+
+            worldPivotPoint = self.translate( point, -self.worldPivot[0], -self.worldPivot[1], -self.worldPivot[2])
+
+            zRotated = matrixMultiply(worldPivotPoint, 0, 0, 0, self.camera.getCameraZRotation())
             xRotated = matrixMultiply(zRotated, 0, 0, 0, self.camera.getCameraXRotation())
             yawRotated = matrixMultiply(xRotated, 0, 0, 0, self.camera.getYawMatrix())
-            #worldPivotPointReverted = self.translate( yawRotated, self.worldPivot[0], self.worldPivot[1], self.worldPivot[2])
-            viewedPoint = matrixMultiply(yawRotated, 0, 0, 0, self.camera.lookAt())       
+
+            worldPivotPointReverted = self.translate( yawRotated, self.worldPivot[0], self.worldPivot[1], self.worldPivot[2])
+            viewedPoint = matrixMultiply(worldPivotPointReverted, 0, 0, 0, self.camera.lookAt())       
 
             if viewedPoint[2] < self.near:
                 return None
@@ -361,7 +368,7 @@ class lineObject(point):
         self.p2 = p2
         self.line = self.sortPoints([p1, p2])
         self.camera = camera
-        self.worldPivot = [0, 0, 0]
+        self.worldPivot = worldPivot
 
         self.normalizePoints = [[0, 0, 0, 0] for i in range(4)]
         self.initializeConstants()
@@ -381,10 +388,22 @@ class lineObject(point):
         return [projectedX, projectedY]
 
 
+    def mutatePoint(self, point):
+        point[0] += app.meshList[app.selectedMeshIndex].rotationPoint[0]
+        point[1] += app.meshList[app.selectedMeshIndex].rotationPoint[1]
+        point[2] += app.meshList[app.selectedMeshIndex].rotationPoint[2]
+
     def getTransformedPoints(self):
         finalLine = []
         for point in self.line:
+            if(app.selectedMeshIndex != None):
+                self.worldPivot = vectorSubtract(app.worldPivot, [0, 0, 0])
+                #self.worldPivot = vectorSubtract(app.worldPivot, app.meshList[app.selectedMeshIndex].rotationPoint)
+            else:
+                self.worldPivot = vectorSubtract(app.worldPivot, [0, 0, 0])
+            
             worldPivotPoint = self.translate( point, -self.worldPivot[0], -self.worldPivot[1], -self.worldPivot[2])
+
             zRotated = matrixMultiply(worldPivotPoint, 0, 0, 0, self.camera.getCameraZRotation())
             xRotated = matrixMultiply(zRotated, 0, 0, 0, self.camera.getCameraXRotation())
             yawRotated = matrixMultiply(xRotated, 0, 0, 0, self.camera.getYawMatrix())

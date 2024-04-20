@@ -54,7 +54,7 @@ def chooseMesh(s):
         [three, four, two]
         ]
     rectHeight = 1
-    size = 3
+    size = 1
     Plane = [
             [(0, 0, 0), (0, size, 0), (size, size, 0)], 
             [(0, 0, 0), (size, size, 0), (size, 0, 0)], 

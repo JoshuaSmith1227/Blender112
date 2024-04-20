@@ -8,7 +8,7 @@ from drawFunctions import*
 from UI_Functions import*
 
 #   pointInPolygon: https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/
-#   Graham Scan Algorithm: https://www.geeksforgeeks.org/convex-hull-using-graham-scan/
+#   Graham Scan Algorithm (Drawing Mesh Outline): https://www.geeksforgeeks.org/convex-hull-using-graham-scan/
 #   Merge Sort from CS academy 
 
 # ====================================================
@@ -17,15 +17,16 @@ from UI_Functions import*
 
 def onAppStart(app):
     app.imageStorage = imageStorage()
-    app.width = 1100
-    app.height = 700
+    app.width = 1250
+    app.height = 800
     app.cameraVector = [0, 0, 0]
 
     app.cameraPos = [0, 0, 10]
     app.worldPivot = [.5, .5, .5]
     app.camera = Camera(app.cameraPos, [0, 0, 0], [0, 1, 0])
+    app.meshSpawnPoint = [0, 0, 0]
     
-    app.testMesh = Mesh( chooseMesh('cube'), 'cube', app.camera, app.worldPivot)
+    app.testMesh = Mesh( chooseMesh('pyramid'), 'pyramid', app.camera, app.worldPivot)
     app.testMesh2 = Mesh( chooseMesh('pyramid'), 'pyramid', app.camera, app.worldPivot)
 
     app.testMesh.zTrans = 0
@@ -53,10 +54,12 @@ def onAppStart(app):
                 'Edit': False,
                 'Sculpt': False,
                     }
-
+    app.sidePannelX = 3*app.width/4
     app.sideButtons = getControlButtons(app)
     app.dropDownButtons = getDropDownButtons(app)
+    app.sliderButton = getSliderButtons(app)
 
+    app.nonDropDownButtons = app.sideButtons + app.dropDownButtons
     app.controlButtons = app.sideButtons + app.dropDownButtons
     
     app.selectedButton = None
@@ -76,6 +79,7 @@ def onAppStart(app):
     app.grab = False
     app.showMeshWindow = False
     app.keys = []
+
 
 
     
@@ -110,6 +114,9 @@ def onKeyHold(app, keys):
         app.modeStates['Object'] = False
         app.modeStates['Sculpt'] = False
         app.currentMode.url = getCurrentMode(app)
+
+    if('`' in keys):
+        app.worldPivot = vectorAdd(app.meshList[app.selectedMeshIndex].getMidpoint(), app.meshList[app.selectedMeshIndex].translateList)
 
     if(app.selectedMeshIndex != None):
         if('r' in keys):
@@ -203,6 +210,10 @@ def controlButtonHovered(app, mx, my):
         if(button.hovered(mx, my)):
             app.hoveredButton = button
 
+def sliderHovered(app, mx, my):
+    for slider in app.sliderButton:
+        if(slider.hovered(mx, my)):
+            slider.x = mx
 
 def selectMesh(app, mx, my):
     if ableToDeselect(app, mx, my):
@@ -221,6 +232,7 @@ def getRidOfDropDownMenu(app, mx, my):
     for b in app.dropDownButtons:
         if(not b.dropDownHovered(mx, my) and b.drawDropDown):
             b.drawDropDown = False
+            app.controlButtons = app.nonDropDownButtons[:]
 
 def moveScaleRotateHovered(app, mx, my):
     foundButton = False
@@ -306,6 +318,18 @@ def onMouseMove(app, mx, my):
     app.movedMx = mx
     app.movedMy = my
 
+#['Camera', 'Top', 'Bottom', 'Front', 'Back', 'Right', 'Left']
+def changeView(app, button):
+    if(button == 'Bottom'):
+        app.camera.xAngle = math.pi
+        app.camera.yaw = 0
+    elif(button == 'Top'):
+        app.camera.yaw = 0
+        app.camera.xAngle = -math.pi
+    elif(button == 'Front'):
+        app.camera.yaw = math.pi/2
+
+
 def onMousePress(app, mx, my, button):
     app.drawDottedLine = False
     drawDropDownMenus(app, mx, my)
@@ -315,8 +339,10 @@ def onMousePress(app, mx, my, button):
     if(button == 0):
         selectMesh(app, mx, my)   
     updateControls(app)       
-    
-    moveScaleRotateHovered(app, mx, my)    
+    updateButtons(app, mx, my)
+    moveScaleRotateHovered(app, mx, my)   
+    spawnNewMesh(app, app.selectedButton) 
+    changeView(app, app.selectedButton)
 
 def onMouseDrag(app, mx, my, button):
     if(button[0] == 1):
@@ -337,15 +363,21 @@ def onKeyRelease(app, key):
     app.keys = []
 
 def redrawAll(app):    
-    drawRect(0, 0, app.width, app.height, fill = rgb(30, 30, 30))
+    
+    drawRect(0, 0, app.width, app.height, fill = 'black')
     drawBetterRect(app, 15, 25, app.width-30, app.height-20, rgb(60, 60, 60), 13)
+
+    drawRect(0, 0, app.width, 50, fill = rgb(35, 35, 35), opacity = 50)
     drawLabel(app.selectedButton, 700, 100, fill = 'white')
     drawLabel(app.hoveredButton, 700, 120, fill = 'white')
     drawGrid(app)
+    selected = None
     for i in range(len(app.meshList)):
         draw3DShape(app, app.meshList[i], i)
         if(i == app.selectedMeshIndex):
-            drawControl(app, i)
+            selected = i
+    if(selected != None):
+        drawControl(app, selected)
 
     drawWorldOrigin()
     drawControlButtons(app)
@@ -367,9 +399,11 @@ def redrawAll(app):
         drawLine(app.mx, app.draggedMy, app.draggedMx, app.draggedMy, fill = 'white', dashes = True)
     drawControlDetails(app)    
 
+
 def onStep(app):
     makeGrid(app)
-    app.testMesh.initializeTransforms()
+    if(app.selectedMeshIndex != None):
+        app.meshList[app.selectedMeshIndex].initializeTransforms()
     updateMoveScaleRotateButtons(app)
 
 

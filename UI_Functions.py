@@ -56,7 +56,7 @@ class imageStorage:
         self.meshSelect = "C:\\Users\\Owner\\Downloads\\blenderIcons\\MeshSelect.png"
         self.meshSelectSize = getImageSize(self.meshSelect)
 
-        self.select = "C:\\Users\\Owner\\Downloads\\blenderIcons\\Select.png"
+        self.select = "C:\\Users\\Owner\\Downloads\\blenderIcons\\Select2.png"
         self.selectSize = getImageSize(self.select)
 
         self.view = "C:\\Users\\Owner\\Downloads\\blenderIcons\\View.png"
@@ -73,19 +73,38 @@ def getControlButtons(app):
     box = Picture(app.imageStorage.boxIcon, 15, 25+dy, app.imageStorage.boxSize[0]/.85, app.imageStorage.boxSize[1]/.9, app.imageStorage.pressedBoxIcon)
     cursor = Picture(app.imageStorage.cursorIcon, 16, 60+dy, app.imageStorage.cursorSize[0]/.8, app.imageStorage.cursorSize[1]/.9, app.imageStorage.pressedCursorIcon)
     
-    editorIcon = Picture(app.imageStorage.editorTypeIcon, 16, 25, app.imageStorage.editorTypeSize[0]/1.3, app.imageStorage.editorTypeSize[1]/1.3, app.imageStorage.editorTypeIcon)
+    editorIcon = Picture(app.imageStorage.editorTypeIcon, 16, 20, app.imageStorage.editorTypeSize[0]/1.3, app.imageStorage.editorTypeSize[1]/1.3, app.imageStorage.editorTypeIcon)
     app.currentMode = Picture(getCurrentMode(app), 60, 20, app.imageStorage.objectModeSize[0]/1.3,app.imageStorage.objectModeSize[1]/1.3, getCurrentMode(app))
 
     return [move, scale, rotate, transform, box, cursor, editorIcon]
 
 def getDropDownButtons(app):
-
-    editorMode = DropDown(getCurrentMode(app), 60, 25, app.imageStorage.objectModeSize[0]/1.3, app.imageStorage.objectModeSize[1]/1.3, app.imageStorage.objectEditSculpt)
-    MeshButtonList = [button(320, 55, app.imageStorage.meshSelectSize[0], app.imageStorage.meshSelectSize[1]/10)]
-    addMesh = DropDown(None, 320, 25, 30, 20, app.imageStorage.meshSelect, 'Add')
-    view = DropDown(None, 260, 25, 30, 20, app.imageStorage.view, 'view')
-    select = DropDown(None, 200, 25, 35, 20, app.imageStorage.select, 'select')
+    modeButtonList = ['Object', 'Edit', 'Sculpt']
+    editorMode = DropDown(getCurrentMode(app), 60, 20, app.imageStorage.objectModeSize[0]/1.3, app.imageStorage.objectModeSize[1]/1.3, app.imageStorage.objectEditSculpt, modeButtonList)
+    MeshButtonList = ['Plane', 'cube', 'circle', 'UV Sphere', 'Ice Sphere', 'Cylinder', 'Cone', 'Torus', 'Grid', 'Monkey']
+    addMesh = DropDown(None, 300, 20, 30, 15, app.imageStorage.meshSelect, MeshButtonList, 'Add')
+    viewButtonList = ['Camera', 'Top', 'Bottom', 'Front', 'Back', 'Right', 'Left']
+    view = DropDown(None, 250, 20, 30, 15, app.imageStorage.view, viewButtonList, 'view')
+    selectButtonList = ['All', 'None', 'Invert', 'Box Select', 'Circle Select']
+    select = DropDown(None, 200, 20, 35, 15, app.imageStorage.select, selectButtonList, 'select')
     return [editorMode, addMesh, view, select]
+
+def getSliderButtons(app):
+    sidePanel = slider('left', 20, app.sidePannelX, 0, app.width - app.sidePannelX, app.height)
+    return [sidePanel]
+
+def updateButtons(app, mx, my):
+    ddButtons = None
+    for dropDown in app.dropDownButtons:
+        if(dropDown.dropDownHovered(mx, my)):
+            ddButtons = dropDown.getDropDownButtons()
+    
+    if(ddButtons != None):
+        app.controlButtons += ddButtons
+
+def drawSliderButtons(app):
+    for b in app.sliderButton:
+        pass
 
 def drawDropDowns(app):
     for b in app.dropDownButtons:
@@ -97,7 +116,6 @@ def drawDropDowns(app):
         if(b.drawDropDown):
             drawImage(b.dropDownImage, b.x, b.y + b.height, width = getImageSize(b.dropDownImage)[0]/1.3, height = getImageSize(b.dropDownImage)[1]/1.3 )
             drawRect(b.x, b.y, b.width, b.height, fill = rgb(60, 81, 88), opacity = 30 )
-
 
 
 def updateMoveScaleRotateButtons(app):

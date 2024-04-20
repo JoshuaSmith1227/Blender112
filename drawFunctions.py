@@ -24,8 +24,10 @@ def drawXYZlines(app):
     x = lineObject([-15, 2, 0], [15, 2, 0], app.camera, [0, 0, 0]).getTransformedPoints()
     y = lineObject([0, 2, -15], [0, 2, 15], app.camera, [0, 0, 0]).getTransformedPoints()
     z = lineObject([0, 10, 0], [0, -10, 0], app.camera, [0, 0, 0]).getTransformedPoints()
-    drawLinePoints(x[0], x[1], 'red', False, 1.5, 50)
-    drawLinePoints(y[0], y[1], 'green', False, 1.5, 50)
+    if(len(x) == 2):
+        drawLinePoints(x[0], x[1], 'red', False, 1.5, 50)
+    if(len(y) == 2):
+        drawLinePoints(y[0], y[1], 'green', False, 1.5, 50)
     #drawLinePoints(z[0], z[1], 'blue', False, 1.5, 50)
 
 
@@ -127,17 +129,27 @@ def squareWave(trigFunction, angle):
             return -1
 
 def drawWorldOrigin():
-    p1 = point([0, 2, 0], app.camera).getTransformedPoints()
-    startPoint = [0, 2, 0]
+    p1 = point(vectorAdd(app.meshSpawnPoint, [0, 2, 0]), app.camera).getTransformedPoints()
+    startPoint = vectorAdd(app.meshSpawnPoint, [0, 2, 0])
     xLine = lineObject(vectorAdd(startPoint, [-.1, 0, 0]), vectorAdd(startPoint, [.1, 0, 0]), app.camera, app.worldPivot).getTransformedPoints()
     yLine = lineObject(vectorAdd(startPoint, [0, 0, -.1]), vectorAdd(startPoint, [0, 0, .1]), app.camera, app.worldPivot).getTransformedPoints()
     zLine = lineObject(vectorAdd(startPoint, [0, .1, 0]), vectorAdd(startPoint, [0, -.1, 0]), app.camera, app.worldPivot).getTransformedPoints()
     
-    drawCircle(p1[0], p1[1], 10, fill = None, border = 'white', borderWidth = .5)
-    drawLinePoints(xLine[0], xLine[1], 'black', False, 1)
-    drawLinePoints(yLine[0], yLine[1], 'black', False, 1)
-    drawLinePoints(zLine[0], zLine[1], 'black', False, 1)
-    drawCircle(p1[0], p1[1], 2.5, fill = 'orange', border = 'black', borderWidth = .2)
+    if(p1 != None):
+        if(len(p1) == 2):
+            drawCircle(p1[0], p1[1], 10, fill = None, border = 'white', borderWidth = .5)
+    if(xLine != None):
+        if(len(xLine) == 2):
+            drawLinePoints(xLine[0], xLine[1], 'black', False, 1)
+    if(yLine != None):
+        if(len(yLine) == 2):
+            drawLinePoints(yLine[0], yLine[1], 'black', False, 1)
+    if(zLine != None):
+        if(len(zLine) == 2):
+            drawLinePoints(zLine[0], zLine[1], 'black', False, 1)
+    if(p1 != None):
+        if(len(p1) == 2):
+            drawCircle(p1[0], p1[1], 2.5, fill = 'orange', border = 'black', borderWidth = .2)
 
 
 def drawSelectedAxisLines(app):
@@ -162,6 +174,25 @@ def drawOutline(frontTris):
         cx, cy = frontTris[tri].screenPoints[4], frontTris[tri].screenPoints[5]
         result.extend([(ax, ay), (bx, by), (cx, cy)])
     drawPolygon(*tupleToList(resizePolygon(grahamScan(result), 1.025)), fill = 'orange')
+
+
+def spawnNewMesh(app, meshName):
+
+    if(meshName == 'plane'):
+        app.selectedButton = None
+        app.meshList.append( Mesh( chooseMesh('plane'), 'plane', app.camera, app.worldPivot) )
+    elif(meshName == 'cube'):
+        app.selectedButton = None
+        app.meshList.append(  Mesh( chooseMesh('cube'), 'cube', app.camera, app.worldPivot) )
+    elif(meshName == 'Circle'):
+        pass
+    elif(meshName == 'UV Sphere'):
+        pass
+    elif(meshName == 'Ice Sphere'):
+        pass
+    elif(meshName == 'Cylinder'):
+        app.selectedButton = None
+        app.meshList.append(  Mesh( chooseMesh('cylindar'), 'cylindar', app.camera, app.worldPivot) )
 
 
     

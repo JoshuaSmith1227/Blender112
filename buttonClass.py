@@ -10,12 +10,11 @@ class button:
         self.name = name
     
     def __repr__(self):
-        return f'Button: {self.name}'
+        return f'{self.name}'
     
     def __eq__(self, other):
-        if(isinstance(other, button)):
-            return self.name == other.name
-        return False
+        return self.name == other
+
 
     def hovered(self, mx, my):
         if(self.x <= mx <= self.x+self.width and self.y <= my <= self.y+self.height):
@@ -88,7 +87,7 @@ class Picture(button):
 #=================================================================================== 
 
 class DropDown(button):
-    def __init__(self, url, x, y, width, height, dropDownImage, name = None, buttonWdith = None, buttonHeight = None):
+    def __init__(self, url, x, y, width, height, dropDownImage, ButtonList, name = None, ):
         super().__init__(x, y, width, height)
         self.url = url
         self.dropDownImage = dropDownImage
@@ -98,8 +97,7 @@ class DropDown(button):
         self.ogPressed = url
 
         self.name = name
-        self.buttonWidth = buttonWdith
-        self.buttonHeight = buttonHeight
+        self.buttonList = ButtonList
     
     def __repr__(self):
         if(self.url != None):
@@ -108,10 +106,15 @@ class DropDown(button):
             return self.name
 
     def dropDownHovered(self, mx, my):
-
         if(self.x <= mx <= self.x + getImageSize(self.dropDownImage)[0] and self.y + self.height <= my <= self.y + getImageSize(self.dropDownImage)[1] or self.hovered(mx, my)):
             return True
         return False
     
-    def dropDownButtons(self):
-        pass
+    def getDropDownButtons(self):
+        result = []
+        num = len(self.buttonList)
+        spacing = (getImageSize(self.dropDownImage)[1]/1.3)/num
+        if(self.drawDropDown):
+            for i in range(num):
+                result.append( button(self.x, self.y + self.height + spacing*i, getImageSize(self.dropDownImage)[0]/1.3, spacing, self.buttonList[i]) )
+            return result
