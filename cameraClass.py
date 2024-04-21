@@ -4,7 +4,7 @@ from MeshClass import*
 from cmu_graphics import *
 
 class Camera:
-    def __init__(self, pos, target, up):
+    def __init__(self, pos, target, up, name):
         self.normalizePoints = [[0, 0, 0, 0] for i in range(4)]
 
         self.cameraPos = pos
@@ -16,8 +16,13 @@ class Camera:
         self.xAngle = 0
         self.zAngle = 0
 
+        self.name = name
+
         self.initializeConstants()
         self.lookAt()
+
+    def __eq__(self, other):
+        return self.name == other
 
     def lookAt(self):
         newForward = convertToUnitVector(vectorSubtract(self.target, self.cameraPos))

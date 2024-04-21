@@ -8,9 +8,10 @@ from otherFunctions import*
 
 def makeGrid(app):
     app.lines = []
-    for i in range(-15, 16):
-        app.lines.append( lineObject([-15, 2, i], [15, 2, i], app.camera, [0, 0, 0]) )
-        app.lines.append( lineObject([i, 2, -15], [i, 2, 15], app.camera, [0, 0, 0]) )
+    size = 15
+    for i in range(-size, size+1):
+        app.lines.append( lineObject([-size, 2, i], [size, 2, i], app.camera, [0, 0, 0]) )
+        app.lines.append( lineObject([i, 2, -size], [i, 2, size], app.camera, [0, 0, 0]) )
 
         
 def drawGrid(app):
@@ -127,6 +128,38 @@ def squareWave(trigFunction, angle):
             return 1
         else:
             return -1
+
+def drawRotationGizmo(app):
+
+    xLine = lineObject([0, 0, 0], [.08, .001, 0], app.gizmoCamera, app.worldPivot).getTransformedPoints()
+    yLine = lineObject([0, 0, 0], [0, 0, .08], app.gizmoCamera, app.worldPivot).getTransformedPoints()
+    zLine = lineObject([0, 0, 0], [0, .08, 0], app.gizmoCamera, app.worldPivot).getTransformedPoints()
+
+    xLine[0][0] += app.sliderButton[0].x - 50
+    xLine[1][0] += app.sliderButton[0].x - 50
+    xLine[0][1] += 90
+    xLine[1][1] += 90
+    drawLinePoints(xLine[0], xLine[1], 'red', False, 2)
+    drawCircle(xLine[1][0], xLine[1][1], 9, fill = 'red', border = rgb(205, 11, 20))
+    drawLabel('X', xLine[1][0], xLine[1][1], fill = 'black', bold = True)
+
+    yLine[0][0] += app.sliderButton[0].x - 50
+    yLine[1][0] += app.sliderButton[0].x - 50
+    yLine[0][1] += 90
+    yLine[1][1] += 90
+    drawLinePoints(yLine[0], yLine[1], 'lightGreen', False, 2)
+    drawCircle(yLine[1][0], yLine[1][1], 9, fill = 'lightGreen', border = rgb(10, 127, 0))
+    drawLabel('Y', yLine[1][0], yLine[1][1], fill = 'black', bold = True)
+
+    zLine[0][0] += app.sliderButton[0].x - 50
+    zLine[1][0] += app.sliderButton[0].x - 50
+    zLine[0][1] += 90
+    zLine[1][1] += 90
+    drawLinePoints(zLine[0], zLine[1], 'Blue', False, 2)
+    drawCircle(zLine[1][0], zLine[1][1], 9, fill = 'Blue', border = rgb(10, 47, 135))
+    drawLabel('Z', zLine[1][0], zLine[1][1], fill = 'black', bold = True)
+    
+
 
 def drawWorldOrigin():
     p1 = point(vectorAdd(app.meshSpawnPoint, [0, 2, 0]), app.camera).getTransformedPoints()

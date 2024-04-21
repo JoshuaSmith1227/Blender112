@@ -396,11 +396,11 @@ class lineObject(point):
     def getTransformedPoints(self):
         finalLine = []
         for point in self.line:
-            if(app.selectedMeshIndex != None):
+            if(self.camera.name != 'Gizmo Camera'):
+                #print(self.camera)
                 self.worldPivot = vectorSubtract(app.worldPivot, [0, 0, 0])
-                #self.worldPivot = vectorSubtract(app.worldPivot, app.meshList[app.selectedMeshIndex].rotationPoint)
             else:
-                self.worldPivot = vectorSubtract(app.worldPivot, [0, 0, 0])
+                self.worldPivot = [0, 0, 0]
             
             worldPivotPoint = self.translate( point, -self.worldPivot[0], -self.worldPivot[1], -self.worldPivot[2])
 

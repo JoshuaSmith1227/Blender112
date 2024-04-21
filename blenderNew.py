@@ -17,13 +17,16 @@ from UI_Functions import*
 
 def onAppStart(app):
     app.imageStorage = imageStorage()
-    app.width = 1250
+    app.width = 1300
     app.height = 800
     app.cameraVector = [0, 0, 0]
 
     app.cameraPos = [0, 0, 10]
     app.worldPivot = [.5, .5, .5]
-    app.camera = Camera(app.cameraPos, [0, 0, 0], [0, 1, 0])
+
+    app.camera = Camera(app.cameraPos, [0, 0, 0], [0, 1, 0], 'World Camera')
+    app.gizmoCamera = Camera([0, 0, 1], [0, 0, 0], [0, 1, 0], 'Gizmo Camera')
+
     app.meshSpawnPoint = [0, 0, 0]
     
     app.testMesh = Mesh( chooseMesh('pyramid'), 'pyramid', app.camera, app.worldPivot)
@@ -55,6 +58,7 @@ def onAppStart(app):
                 'Sculpt': False,
                     }
     app.sidePannelX = 3*app.width/4
+
     app.sideButtons = getControlButtons(app)
     app.dropDownButtons = getDropDownButtons(app)
     app.sliderButton = getSliderButtons(app)
@@ -81,8 +85,6 @@ def onAppStart(app):
     app.keys = []
 
 
-
-    
 def onKeyHold(app, keys):
     app.keys = keys
     vForward = vectorMultiply(app.camera.lookDir, .3)
@@ -155,6 +157,7 @@ def onKeyHold(app, keys):
 def cameraMove(app, mx, my):
     cameraDrag = [(mx-app.mx)*.005, (my-app.my)*.005]
     app.camera.yaw = app.initialYaw + cameraDrag[0]
+    app.gizmoCamera.yaw = app.initialYaw + cameraDrag[0]
     #app.camera.xAngle = app.initialxAngle - cameraDrag[1]*math.cos(app.camera.yaw )
     #app.camera.zAngle = app.initialzAngle + cameraDrag[1]*math.sin(app.camera.yaw )
 
@@ -203,6 +206,7 @@ def controlButtonPressed(app, mx, my):
             if(15 <= mx <= 54 and 25+40 <= my <= 236+40):
                 if(isinstance(button, Picture)):
                     button.url = button.ogURL
+            
 
 def controlButtonHovered(app, mx, my):
     app.hoveredButton = None
@@ -210,15 +214,25 @@ def controlButtonHovered(app, mx, my):
         if(button.hovered(mx, my)):
             app.hoveredButton = button
 
+def resetSliderDragState(app, mx, my):
+    for slider in app.sliderButton:
+        slider.canDrag = False
+
 def sliderHovered(app, mx, my):
     for slider in app.sliderButton:
         if(slider.hovered(mx, my)):
-            slider.x = mx
+            slider.canDrag = True
+
+def dragSliders(app, mx, my):
+    for slider in app.sliderButton:
+        if(slider.canDrag):
+            print(slider.width)
+            slider.width = slider.endPoint - mx
+            slider.x = mx 
 
 def selectMesh(app, mx, my):
     if ableToDeselect(app, mx, my):
         app.selectedMeshIndex = None
-
     for i in range( len(app.meshList) ):
         if( selectedMesh(app, app.meshList[i], mx, my) ):
             app.selectedMeshIndex = i   
@@ -266,6 +280,7 @@ def ableToDeselect(app, mx, my):
     return True
 
 def transformMoveScaleRotate(app, mx, my):
+    
     if(app.move):
         if('x-axis' in app.selectedAxis):      
             app.meshList[app.selectedMeshIndex].xTrans = app.xTransInitial - (mx - app.mx)*.008*squareWave('cos', app.camera.yaw)
@@ -274,19 +289,28 @@ def transformMoveScaleRotate(app, mx, my):
         if('z-axis' in app.selectedAxis):
             app.meshList[app.selectedMeshIndex].yTrans = app.yTransInitial + (my - app.my)*.008
     elif(app.scale):
-        if('x-axis' in app.selectedAxis):      
+        if('x-axis' in app.selectedAxis and 'y-axis' in app.selectedAxis and 'z-axis' in app.selectedAxis):
+            startPoint = vectorSubtract(app.meshList[app.selectedMeshIndex].translateList, app.meshList[app.selectedMeshIndex].rotationPoint)
+            startPoint[1] += 1
+            app.meshList[app.selectedMeshIndex].xScale = abs(app.xScaleInitial + (mx - app.mx)*.008)
+            app.meshList[app.selectedMeshIndex].yScale = abs(app.yScaleInitial + (mx - app.mx)*.008)
+            app.meshList[app.selectedMeshIndex].zScale = abs(app.zScaleInitial + (mx - app.mx)*.008)
+        if('x-axis' in app.selectedAxis and len(app.selectedAxis) != 3):      
             app.meshList[app.selectedMeshIndex].xScale = abs(app.xScaleInitial + (mx - app.mx)*.008 *squareWave('cos', app.camera.yaw)*-1)
             if(app.meshList[app.selectedMeshIndex].xScale < .1):
                 app.meshList[app.selectedMeshIndex].yAngle = math.pi
-        if('y-axis' in app.selectedAxis):
+        if('y-axis' in app.selectedAxis and len(app.selectedAxis) != 3):
             app.meshList[app.selectedMeshIndex].zScale = abs(app.zScaleInitial + (mx - app.mx)*.008)
             if(app.meshList[app.selectedMeshIndex].zScale < .1):
                 app.meshList[app.selectedMeshIndex].yAngle = math.pi
-        if('z-axis' in app.selectedAxis):
+        if('z-axis' in app.selectedAxis and len(app.selectedAxis) != 3):
             app.meshList[app.selectedMeshIndex].yScale = abs(app.yScaleInitial - (my - app.my)*.008)
             if(app.meshList[app.selectedMeshIndex].yScale < .1):
                 app.meshList[app.selectedMeshIndex].zAngle += math.pi%6.24
 
+def getSign(m, n):
+    if(n-m > 0): return 1
+    elif(n-m < 0): return -1
 
 def initiazliseMoveScaleRotate(app):
     if(app.selectedMeshIndex != None):
@@ -318,19 +342,35 @@ def onMouseMove(app, mx, my):
     app.movedMx = mx
     app.movedMy = my
 
-#['Camera', 'Top', 'Bottom', 'Front', 'Back', 'Right', 'Left']
 def changeView(app, button):
     if(button == 'Bottom'):
         app.camera.xAngle = math.pi
         app.camera.yaw = 0
+        app.selectedButton = None
     elif(button == 'Top'):
         app.camera.yaw = 0
         app.camera.xAngle = -math.pi
+        app.selectedButton = None
     elif(button == 'Front'):
+        app.camera.xAngle = 0
         app.camera.yaw = math.pi/2
+        app.selectedButton = None
+    elif(button == 'Back'):
+        app.camera.xAngle = 0
+        app.camera.yaw = -math.pi/2
+        app.selectedButton = None
+    elif(button == 'Right'):
+        app.camera.xAngle = 0
+        app.camera.yaw = math.pi
+        app.selectedButton = None
+    elif(button == 'Left'):
+        app.camera.xAngle = 0
+        app.camera.yaw = -math.pi
+        app.selectedButton = None
 
 
 def onMousePress(app, mx, my, button):
+    sliderHovered(app, mx, my)
     app.drawDottedLine = False
     drawDropDownMenus(app, mx, my)
     initializeCameraMove(app, mx, my)
@@ -346,13 +386,17 @@ def onMousePress(app, mx, my, button):
 
 def onMouseDrag(app, mx, my, button):
     if(button[0] == 1):
-        cameraMove(app, mx, my)
+        cameraMove(app, mx, my)  
     elif(button[0] == 0):
+        dragSliders(app, mx, my)
+        sliderHovered(app, mx, my)
+        updateControlButtonPos(app)
         app.draggedMx = mx
         app.draggedMy = my
         transformMoveScaleRotate(app, mx, my)
     
 def onMouseRelease(app, mx, my):
+    resetSliderDragState(app, mx, my)
     app.selectedAxis = []
     app.draggedMx = 0
     app.draggedMy = 0
@@ -381,6 +425,7 @@ def redrawAll(app):
 
     drawWorldOrigin()
     drawControlButtons(app)
+    
     drawLabel('User Perspective', 70, 70, fill = 'white', align = 'left', size = 12)
     drawLabel('(1) Scene Collection | Cube', 70, 90, fill = 'white', align = 'left', size = 12)
     if(app.drawDottedLine):
@@ -389,6 +434,7 @@ def redrawAll(app):
         midpoint = point(startPoint, app.camera).getTransformedPoints()
         drawLine(app.movedMx, app.movedMy, midpoint[0], midpoint[1], dashes = True , arrowStart = True)
     drawSelectedAxisLines(app)
+    drawSliderButtons(app)
 
     drawLabel(' '.join(app.keys), 100, app.height-100, fill = 'white', size = 30)
     drawDropDowns(app)
@@ -398,7 +444,7 @@ def redrawAll(app):
         drawLine(app.draggedMx, app.draggedMy, app.draggedMx, app.my, fill = 'white', dashes = True)
         drawLine(app.mx, app.draggedMy, app.draggedMx, app.draggedMy, fill = 'white', dashes = True)
     drawControlDetails(app)    
-
+    drawRotationGizmo(app)
 
 def onStep(app):
     makeGrid(app)

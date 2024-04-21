@@ -62,6 +62,18 @@ class imageStorage:
         self.view = "C:\\Users\\Owner\\Downloads\\blenderIcons\\View.png"
         self.viewSize = getImageSize(self.view)
 
+        self.solid = "C:\\Users\\Owner\\Downloads\\blenderIcons\\SolidMode.png"
+        self.solidSize = getImageSize(self.solid)
+        self.solidSelected = "C:\\Users\\Owner\\Downloads\\blenderIcons\\solidSelected2.png"
+
+        self.wireframe = "C:\\Users\\Owner\\Downloads\\blenderIcons\\WireframeMode.png"
+        self.wireframeSize = getImageSize(self.wireframe)
+        self.wireframeSelected = "C:\\Users\\Owner\\Downloads\\blenderIcons\\WireframeSelected.png"
+
+        self.xRay = "C:\\Users\\Owner\\Downloads\\blenderIcons\\XrayMode.png"
+        self.xRaySize = getImageSize(self.xRay)
+        self.xRaySelected = "C:\\Users\\Owner\\Downloads\\blenderIcons\\XraySelected.png"
+
 
 
 def getControlButtons(app):
@@ -75,8 +87,12 @@ def getControlButtons(app):
     
     editorIcon = Picture(app.imageStorage.editorTypeIcon, 16, 20, app.imageStorage.editorTypeSize[0]/1.3, app.imageStorage.editorTypeSize[1]/1.3, app.imageStorage.editorTypeIcon)
     app.currentMode = Picture(getCurrentMode(app), 60, 20, app.imageStorage.objectModeSize[0]/1.3,app.imageStorage.objectModeSize[1]/1.3, getCurrentMode(app))
+    
+    solid = Picture(app.imageStorage.solid, app.sidePannelX-50, 20, app.imageStorage.solidSize[0]/1.3, app.imageStorage.solidSize[1]/1.3, app.imageStorage.solidSelected)
+    wireframe = Picture(app.imageStorage.wireframe, app.sidePannelX-30, 20, app.imageStorage.wireframeSize[0]/1.3, app.imageStorage.wireframeSize[1]/1.3, app.imageStorage.wireframeSelected)
+    xRay = Picture(app.imageStorage.xRay, app.sidePannelX-90, 20, app.imageStorage.xRaySize[0]/1.3, app.imageStorage.xRaySize[1]/1.2, app.imageStorage.xRaySelected)
 
-    return [move, scale, rotate, transform, box, cursor, editorIcon]
+    return [move, scale, rotate, transform, box, cursor, editorIcon, solid, wireframe, xRay]
 
 def getDropDownButtons(app):
     modeButtonList = ['Object', 'Edit', 'Sculpt']
@@ -89,8 +105,16 @@ def getDropDownButtons(app):
     select = DropDown(None, 200, 20, 35, 15, app.imageStorage.select, selectButtonList, 'select')
     return [editorMode, addMesh, view, select]
 
+def updateControlButtonPos(app):
+    buttons = app.controlButtons[7:10]
+    for i in range(len(buttons)):
+        if(i != 2):
+            buttons[i].x = app.sliderButton[0].x - 20 * (i+1)
+        else:
+            buttons[i].x = app.sliderButton[0].x - 20 * (i+1) -20
+
 def getSliderButtons(app):
-    sidePanel = slider('left', 20, app.sidePannelX, 0, app.width - app.sidePannelX, app.height)
+    sidePanel = slider( app.sidePannelX, 0, app.width - app.sidePannelX, app.height,'left', 20, 'sidePannel')
     return [sidePanel]
 
 def updateButtons(app, mx, my):
@@ -104,7 +128,7 @@ def updateButtons(app, mx, my):
 
 def drawSliderButtons(app):
     for b in app.sliderButton:
-        pass
+        drawRect(b.x, b.y, b.width, b.height, fill = rgb(60, 60, 60))
 
 def drawDropDowns(app):
     for b in app.dropDownButtons:

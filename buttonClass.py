@@ -26,11 +26,15 @@ class button:
 #===================================================================================
     
 class slider(button):
-    def __init__(self, sliderControlPoint, sliderWidth, x, y, width, height):
-        super().__init__(self, x, y, width, height)
+    def __init__(self, x, y, width, height, sliderControlPoint, sliderWidth, name = None):
+        super().__init__(x, y, width, height)
         self.control = sliderControlPoint
         self.controlSize = sliderWidth
+        self.name = name
+        self.canDrag = False
+        self.endPoint = self.x + self.width
     
+
     def hovered(self, mx, my):
         if(self.control == 'left'):
             if(self.x <= mx <= self.x + self.controlSize and self.y <= my <= self.y + self.height):
@@ -46,7 +50,7 @@ class slider(button):
 
 class searchBar(button):
     def __init__(self, data, key, x, y, width, height):
-        super().__init__(self, x, y, width, height)
+        super().__init__(x, y, width, height)
         self.data = data
         self.key = key
     

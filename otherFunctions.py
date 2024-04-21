@@ -306,3 +306,6 @@ def getCurrentMode(app):
             return app.imageStorage.editModeIcon
         elif(app.modeStates[e] and e == 'Sculpt'):
             return app.imageStorage.scluptModeIcon
+        
+def dist(x0, x1, y0, y1):
+    return ((x0-x1)**2 + (y0-y1)**2)**.5
