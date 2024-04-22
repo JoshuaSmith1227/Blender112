@@ -58,9 +58,10 @@ def draw3DShape(app, mesh, i):
 
 
 def getMoveScaleRotatePoints(app, i):
+    #startPoint = app.meshList[i].rotationPoint
     startPoint = vectorSubtract(app.meshList[i].translateList, app.meshList[i].rotationPoint)
     startPoint[1] += 1
-    midpoint = point(startPoint, app.camera).getTransformedPoints()
+    #midpoint = point(startPoint, app.camera).getTransformedPoints()
 
     xLine = lineObject(startPoint, vectorAdd(startPoint, [1, 0, 0]), app.camera, app.worldPivot).getTransformedPoints()
     yLine = lineObject(startPoint, vectorAdd(startPoint, [0, 0, 1]), app.camera, app.worldPivot).getTransformedPoints()
@@ -129,35 +130,61 @@ def squareWave(trigFunction, angle):
         else:
             return -1
 
+def sortByZ(points):
+    return sorted(points, key=lambda point: point.preProjectPoints[1][2], reverse=True)
+
 def drawRotationGizmo(app):
+    xLine = lineObject([0, 0, 0], [.08, .001, 0], app.gizmoCamera, app.worldPivot, 'X')
+    yLine = lineObject([0, 0, 0], [0, 0, .08], app.gizmoCamera, app.worldPivot, 'Y')
+    zLine = lineObject([0, 0, 0], [0, .08, 0], app.gizmoCamera, app.worldPivot, 'Z')
 
-    xLine = lineObject([0, 0, 0], [.08, .001, 0], app.gizmoCamera, app.worldPivot).getTransformedPoints()
-    yLine = lineObject([0, 0, 0], [0, 0, .08], app.gizmoCamera, app.worldPivot).getTransformedPoints()
-    zLine = lineObject([0, 0, 0], [0, .08, 0], app.gizmoCamera, app.worldPivot).getTransformedPoints()
+    backX = lineObject([0, 0, 0], [-.08, 0, 0], app.gizmoCamera, app.worldPivot, 'backX')
+    backY = lineObject([0, 0, 0], [0, 0, -.08], app.gizmoCamera, app.worldPivot, 'backY')
+    backZ = lineObject([0, 0, 0], [0, -.08, 0], app.gizmoCamera, app.worldPivot, 'backZ')
 
-    xLine[0][0] += app.sliderButton[0].x - 50
-    xLine[1][0] += app.sliderButton[0].x - 50
-    xLine[0][1] += 90
-    xLine[1][1] += 90
-    drawLinePoints(xLine[0], xLine[1], 'red', False, 2)
-    drawCircle(xLine[1][0], xLine[1][1], 9, fill = 'red', border = rgb(205, 11, 20))
-    drawLabel('X', xLine[1][0], xLine[1][1], fill = 'black', bold = True)
+    xLine.getTransformedPoints()
+    yLine.getTransformedPoints()
+    zLine.getTransformedPoints()
 
-    yLine[0][0] += app.sliderButton[0].x - 50
-    yLine[1][0] += app.sliderButton[0].x - 50
-    yLine[0][1] += 90
-    yLine[1][1] += 90
-    drawLinePoints(yLine[0], yLine[1], 'lightGreen', False, 2)
-    drawCircle(yLine[1][0], yLine[1][1], 9, fill = 'lightGreen', border = rgb(10, 127, 0))
-    drawLabel('Y', yLine[1][0], yLine[1][1], fill = 'black', bold = True)
+    backX.getTransformedPoints()
+    backY.getTransformedPoints()
+    backZ.getTransformedPoints()
+    
+    if(xLine.preProjectPoints != [] and yLine.preProjectPoints != [] and zLine.preProjectPoints != []):
+        lineList = sortByZ( [xLine, yLine, zLine, backX, backY, backZ] )
+        i = 0
+        for l in lineList:
+            line = l.getTransformedPoints()
+            
+            line[0][0] += app.sliderButton[0].x - 60
+            line[1][0] += app.sliderButton[0].x - 60
+            line[0][1] += 110
+            line[1][1] += 110
 
-    zLine[0][0] += app.sliderButton[0].x - 50
-    zLine[1][0] += app.sliderButton[0].x - 50
-    zLine[0][1] += 90
-    zLine[1][1] += 90
-    drawLinePoints(zLine[0], zLine[1], 'Blue', False, 2)
-    drawCircle(zLine[1][0], zLine[1][1], 9, fill = 'Blue', border = rgb(10, 47, 135))
-    drawLabel('Z', zLine[1][0], zLine[1][1], fill = 'black', bold = True)
+            if(i <= 2):
+                opac = (l.preProjectPoints[0][2]*4)**3      
+            else:
+                opac = 100
+                        
+            if(l.name == 'X'):
+                drawLinePoints(line[0], line[1], 'red', False, 2)
+                drawCircle(line[1][0], line[1][1], 9, fill = 'red', border = rgb(205, 11, 20), opacity = opac)
+                drawLabel('X', line[1][0], line[1][1], fill = 'black', bold = True)
+            elif(l.name == 'Y'):
+                drawLinePoints(line[0], line[1], 'lightGreen', False, 2)
+                drawCircle(line[1][0], line[1][1], 9, fill = 'lightGreen', border = rgb(10, 127, 0), opacity = opac)
+                drawLabel('Y', line[1][0], line[1][1], fill = 'black', bold = True)
+            elif(l.name == 'Z'):
+                drawLinePoints(line[0], line[1], 'Blue', False, 2)
+                drawCircle(line[1][0], line[1][1], 9, fill = 'Blue', border = rgb(10, 47, 135), opacity = opac)
+                drawLabel('Z', line[1][0], line[1][1], fill = 'black', bold = True)
+            elif(l.name == 'backX'):
+                drawCircle(line[1][0], line[1][1], 9, fill = 'red', border = rgb(205, 11, 20), opacity = opac)
+            elif(l.name == 'backY'):
+                drawCircle(line[0][0], line[0][1], 9, fill = 'lightGreen', border = rgb(10, 127, 0), opacity = opac)
+            elif(l.name == 'backZ'):
+                drawCircle(line[1][0], line[1][1], 9, fill = 'Blue', border = rgb(10, 47, 135), opacity = opac)
+            i += 1
     
 
 

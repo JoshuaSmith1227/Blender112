@@ -59,6 +59,7 @@ def onAppStart(app):
                     }
     app.sidePannelX = 3*app.width/4
 
+    app.collectionButtons = []
     app.sideButtons = getControlButtons(app)
     app.dropDownButtons = getDropDownButtons(app)
     app.sliderButton = getSliderButtons(app)
@@ -83,6 +84,8 @@ def onAppStart(app):
     app.grab = False
     app.showMeshWindow = False
     app.keys = []
+
+    app.numOfCollectionItems = 13
 
 
 def onKeyHold(app, keys):
@@ -157,9 +160,13 @@ def onKeyHold(app, keys):
 def cameraMove(app, mx, my):
     cameraDrag = [(mx-app.mx)*.005, (my-app.my)*.005]
     app.camera.yaw = app.initialYaw + cameraDrag[0]
-    app.gizmoCamera.yaw = app.initialYaw + cameraDrag[0]
     #app.camera.xAngle = app.initialxAngle - cameraDrag[1]*math.cos(app.camera.yaw )
     #app.camera.zAngle = app.initialzAngle + cameraDrag[1]*math.sin(app.camera.yaw )
+
+    app.gizmoCamera.yaw = app.camera.yaw
+    #app.gizmoCamera.xAngle = app.camera.xAngle
+    #app.gizmoCamera.zAngle = app.camera.zAngle
+    #print(app.camera.yaw%6.24, app.camera.xAngle%6.24, app.camera.zAngle%6.24)
 
 def initializeCameraMove(app, mx, my):
     app.initialYaw = app.camera.yaw
@@ -220,15 +227,20 @@ def resetSliderDragState(app, mx, my):
 
 def sliderHovered(app, mx, my):
     for slider in app.sliderButton:
-        if(slider.hovered(mx, my)):
+        if( slider.hovered(mx, my) ):
             slider.canDrag = True
 
 def dragSliders(app, mx, my):
-    for slider in app.sliderButton:
-        if(slider.canDrag):
-            print(slider.width)
-            slider.width = slider.endPoint - mx
-            slider.x = mx 
+    for slid in app.sliderButton:
+        if(slid.canDrag):
+            if(slid.control == 'left' or slid.control == 'right'):
+                if(slid == 'sidePannel'):
+                    slider.updateAll(mx, None, slid.endPoint - mx, None)
+                slid.width = slid.endPoint - mx
+                slid.x = mx 
+            elif(slid.control == 'top'):
+                slid.height = slid.endPoint - my
+                slid.y = my 
 
 def selectMesh(app, mx, my):
     if ableToDeselect(app, mx, my):
@@ -247,6 +259,16 @@ def getRidOfDropDownMenu(app, mx, my):
         if(not b.dropDownHovered(mx, my) and b.drawDropDown):
             b.drawDropDown = False
             app.controlButtons = app.nonDropDownButtons[:]
+
+def updateCollectionButtons(app):
+    num = int(app.height/20)
+    spacing = app.height/num
+    start = 1
+    app.collectionButtons = []
+    for i in range(len(app.meshList)):
+        app.collectionButtons.append( button(app.sliderButton[0].x, app.sliderButton[0].y + spacing*(i + start+1), app.sliderButton[0].width, spacing, f'{app.meshList[i].name}.00{i}'))
+
+    app.controlButtons = app.nonDropDownButtons[:] + app.collectionButtons
 
 def moveScaleRotateHovered(app, mx, my):
     foundButton = False
@@ -345,31 +367,44 @@ def onMouseMove(app, mx, my):
 def changeView(app, button):
     if(button == 'Bottom'):
         app.camera.xAngle = math.pi
+        app.gizmoCamera.xAngle = math.pi
         app.camera.yaw = 0
+        app.gizmoCamera.yaw = 0
         app.selectedButton = None
     elif(button == 'Top'):
         app.camera.yaw = 0
         app.camera.xAngle = -math.pi
+        app.gizmoCamera.xAngle = -math.pi
+        app.gizmoCamera.yaw = 0
         app.selectedButton = None
     elif(button == 'Front'):
         app.camera.xAngle = 0
         app.camera.yaw = math.pi/2
+        app.gizmoCamera.yaw = math.pi/2
+        app.gizmoCamera.xAngle = 0
         app.selectedButton = None
     elif(button == 'Back'):
         app.camera.xAngle = 0
         app.camera.yaw = -math.pi/2
+        app.gizmoCamera.yaw = -math.pi/2
+        app.gizmoCamera.xAngle = 0
         app.selectedButton = None
     elif(button == 'Right'):
         app.camera.xAngle = 0
         app.camera.yaw = math.pi
+        app.gizmoCamera.yaw = math.pi
+        app.gizmoCamera.xAngle = 0
         app.selectedButton = None
     elif(button == 'Left'):
         app.camera.xAngle = 0
         app.camera.yaw = -math.pi
+        app.gizmoCamera.yaw = -math.pi
+        app.gizmoCamera.xAngle = 0
         app.selectedButton = None
 
 
 def onMousePress(app, mx, my, button):
+    #updateCollectionButtons(app)
     sliderHovered(app, mx, my)
     app.drawDottedLine = False
     drawDropDownMenus(app, mx, my)
@@ -383,6 +418,8 @@ def onMousePress(app, mx, my, button):
     moveScaleRotateHovered(app, mx, my)   
     spawnNewMesh(app, app.selectedButton) 
     changeView(app, app.selectedButton)
+    
+
 
 def onMouseDrag(app, mx, my, button):
     if(button[0] == 1):
@@ -407,9 +444,8 @@ def onKeyRelease(app, key):
     app.keys = []
 
 def redrawAll(app):    
-    
     drawRect(0, 0, app.width, app.height, fill = 'black')
-    drawBetterRect(app, 15, 25, app.width-30, app.height-20, rgb(60, 60, 60), 13)
+    drawBetterRect(app, 10, 20, app.sliderButton[0].x- 25, app.height-30, rgb(60, 60, 60), 8)
 
     drawRect(0, 0, app.width, 50, fill = rgb(35, 35, 35), opacity = 50)
     drawLabel(app.selectedButton, 700, 100, fill = 'white')
@@ -447,6 +483,7 @@ def redrawAll(app):
     drawRotationGizmo(app)
 
 def onStep(app):
+    #print(len(app.controlButtons))
     makeGrid(app)
     if(app.selectedMeshIndex != None):
         app.meshList[app.selectedMeshIndex].initializeTransforms()

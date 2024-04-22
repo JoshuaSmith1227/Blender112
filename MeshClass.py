@@ -363,7 +363,7 @@ class Triangle:
 #===================================================================
 
 class lineObject(point):
-    def __init__(self, p1, p2, camera, worldPivot):
+    def __init__(self, p1, p2, camera, worldPivot, name = None):
         self.p1 = p1
         self.p2 = p2
         self.line = self.sortPoints([p1, p2])
@@ -373,6 +373,8 @@ class lineObject(point):
         self.normalizePoints = [[0, 0, 0, 0] for i in range(4)]
         self.initializeConstants()
         self.initializeMatrix()
+        self.preProjectPoints = []
+        self.name = name
     
     def sortPoints(self, line):
         p1, p2 = line
@@ -380,6 +382,12 @@ class lineObject(point):
             return [p2, p1]
         else:
             return [p1, p2]
+        
+    def __eq__(self, other):
+        return self.name == other
+    
+    def __repr__(self):
+        return self.name
 
     def projectPoint(self, point):
         normalizedP1 = matrixMultiply(point, 0, 0, 0, self.normalizePoints)
@@ -395,9 +403,9 @@ class lineObject(point):
 
     def getTransformedPoints(self):
         finalLine = []
+        self.preProjectPoints = []
         for point in self.line:
             if(self.camera.name != 'Gizmo Camera'):
-                #print(self.camera)
                 self.worldPivot = vectorSubtract(app.worldPivot, [0, 0, 0])
             else:
                 self.worldPivot = [0, 0, 0]
@@ -408,7 +416,9 @@ class lineObject(point):
             xRotated = matrixMultiply(zRotated, 0, 0, 0, self.camera.getCameraXRotation())
             yawRotated = matrixMultiply(xRotated, 0, 0, 0, self.camera.getYawMatrix())
             worldPivotPointReverted = self.translate( yawRotated, self.worldPivot[0], self.worldPivot[1], self.worldPivot[2])
-            viewedPoint = matrixMultiply(worldPivotPointReverted, 0, 0, 0, self.camera.lookAt())       
+            viewedPoint = matrixMultiply(worldPivotPointReverted, 0, 0, 0, self.camera.lookAt()) 
+
+            self.preProjectPoints.append(viewedPoint)   
 
             if(point == self.line[0]):
                 lineStartViewed = viewedPoint                   

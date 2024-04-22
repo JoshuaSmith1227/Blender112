@@ -26,20 +26,38 @@ class button:
 #===================================================================================
     
 class slider(button):
-    def __init__(self, x, y, width, height, sliderControlPoint, sliderWidth, name = None):
+    instances = []
+    def __init__(self, x, y, width, height, sliderControlPoint, sliderWidth, color, name = None):
         super().__init__(x, y, width, height)
         self.control = sliderControlPoint
         self.controlSize = sliderWidth
         self.name = name
         self.canDrag = False
         self.endPoint = self.x + self.width
+        self.color = color
+        slider.instances.append(self)
     
+    @classmethod
+    def updateAll(cls, x = None, y = None, width = None, height = None):
+        for instance in cls.instances:
+            if(x != None):
+                instance.x = x
+            if(y != None):
+                instance.y = y
+            if(width != None):
+                instance.width = width
+            if(height != None):
+                instance.height = height
 
     def hovered(self, mx, my):
         if(self.control == 'left'):
             if(self.x <= mx <= self.x + self.controlSize and self.y <= my <= self.y + self.height):
                 return True
         elif(self.control == 'right'):
+            if(self.x <= mx <= self.x + self.width and self.y <= my <= self.y + self.controlSize):
+                return True
+            
+        if(self.control == 'top'):
             if(self.x <= mx <= self.x + self.width and self.y <= my <= self.y + self.controlSize):
                 return True
         return False
