@@ -5,6 +5,7 @@ from cameraClass import*
 from otherFunctions import*
 
 class Mesh:
+    meshCounts = dict()
     def __init__(self, points, name, camera, worldPivot):
         self.normalizePoints = [[0, 0, 0, 0] for i in range(4)]
         self.normalizeRotationX = [[0, 0, 0, 0] for i in range(4)]
@@ -16,7 +17,13 @@ class Mesh:
         self.camera = camera
 
         self.points = points
-        self.name = name
+
+        if(name not in Mesh.meshCounts):
+            Mesh.meshCounts[name] = 1
+        else:
+            Mesh.meshCounts[name] += 1
+        
+        self.name = f'{name}.00{str(Mesh.meshCounts[name])}'
 
         self.xTrans = 0
         self.yTrans = 1
@@ -40,7 +47,10 @@ class Mesh:
         self.initializeTransforms()
     
     def __repr__(self):
-        return f'{self.name}'
+        return self.name
+    
+    def __eq__(self, other):
+        return self.name == other
     
     def translate(self, point, x, y, z):
         return [point[0] + x, point[1] + y, point[2] + z]

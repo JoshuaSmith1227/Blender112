@@ -83,6 +83,9 @@ class imageStorage:
         self.collectionIcon = "C:\\Users\\Owner\\Downloads\\blenderIcons\\collectionIcon.png"
         self.collectionSize = getImageSize(self.collectionIcon)
 
+        self.arrow = "C:\\Users\\Owner\\Downloads\\blenderIcons\\arrow.png"
+        self.arrowSize = getImageSize(self.arrow)
+
 
 
 def getControlButtons(app):
@@ -101,7 +104,9 @@ def getControlButtons(app):
     wireframe = Picture(app.imageStorage.wireframe, app.sidePannelX-30, 20, app.imageStorage.wireframeSize[0]/1.3, app.imageStorage.wireframeSize[1]/1.3, app.imageStorage.wireframeSelected)
     xRay = Picture(app.imageStorage.xRay, app.sidePannelX-90, 20, app.imageStorage.xRaySize[0]/1.3, app.imageStorage.xRaySize[1]/1.2, app.imageStorage.xRaySelected)
 
-    return [move, scale, rotate, transform, box, cursor, editorIcon, solid, wireframe, xRay]
+    arrow = Picture(app.imageStorage.arrow, app.sidePannelX-20, 80, app.imageStorage.arrowSize[0], app.imageStorage.arrowSize[1], app.imageStorage.arrow)
+
+    return [move, scale, rotate, transform, box, cursor, editorIcon, solid, wireframe, xRay, arrow]
 
 def getDropDownButtons(app):
     modeButtonList = ['Object', 'Edit', 'Sculpt']
@@ -129,6 +134,20 @@ def getSliderButtons(app):
     collectionPanel = slider( app.sidePannelX, 0, app.width - app.sidePannelX, app.height/3 ,'top', 20, rgb(45, 45, 45), 'collectionPanel')
     return [sidePanel, collectionPanel, modifierPanel]
 
+def updateTransformPanel(app, mx, my):
+    arrow = app.sideButtons[10]
+    if(arrow.isHovered):
+        if(mx <= app.sliderButton[0].x-20):
+            arrow.x = mx
+        else:
+            arrow.x = app.sliderButton[0].x - 25
+
+
+def drawTransformPanel(app):
+    arrow = app.sideButtons[10]
+    if(app.sliderButton[0].x - (arrow.x+arrow.width) - 25 > 0):
+        drawBetterRect(app, arrow.x+arrow.width, arrow.y, app.sliderButton[0].x - arrow.x - 20, 50, rgb(45, 45, 45), 3)
+
 def updateButtons(app, mx, my):
     ddButtons = None
     for dropDown in app.dropDownButtons:
@@ -150,9 +169,9 @@ def drawSliderButtons(app):
         if(b == 'collectionPanel'):
             for i in range(num):                            
                 if(i == 0):
-                    drawBetterRect(app, b.x+3, b.y + spacing*(i + start), b.width, spacing, rgb(45, 45, 90), 3)
+                    drawBetterRect(app, b.x+3, b.y + spacing*(i + start), b.width, spacing, rgb(45, 45, 45), 3)
                 elif(i == num-1):
-                    drawBetterRect(app, b.x+3, b.y + spacing*(i + start), b.width, spacing, rgb(50, 50, 90), 3)   
+                    drawBetterRect(app, b.x+3, b.y + spacing*(i + start), b.width, spacing, rgb(45, 45, 45), 3)   
                 elif(i % 2 == 0):
                     drawRect(b.x, b.y + spacing*(i + start), b.width, spacing, fill = rgb(45, 45, 45))
                 elif(i % 2 == 1):
@@ -161,10 +180,20 @@ def drawSliderButtons(app):
         if(b == 'modifierPanel'):
             drawRect(b.x-5, b.y-2, b.width+5, b.height, fill = rgb(30, 30, 30))
             drawRect(b.x, b.y, b.width, b.height, fill = b.color)
-                
-        for i in range(len(app.collectionButtons)):
-            drawImage(app.imageStorage.meshIcon, app.collectionButtons[i].x, app.collectionButtons[i].y, width = app.imageStorage.meshIconSize[0]/1.3, height = app.imageStorage.meshIconSize[1]/1.3)
-            drawLabel(app.collectionButtons[i].name, app.collectionButtons[i].x+75, app.collectionButtons[i].y-11 + spacing*(i + start), fill = 'white', align = 'left')    
+
+    
+    drawImage(app.imageStorage.collectionIcon, app.sliderButton[0].x+10, app.sliderButton[0].y+20, width = app.imageStorage.collectionSize[0]/1.3, height = app.imageStorage.collectionSize[1]/1.3)
+    drawLabel('Scene Collection', app.sliderButton[0].x+45, app.sliderButton[0].y+28, align = 'left', fill = 'white') 
+    drawLine(app.sliderButton[0].x+20, app.sliderButton[0].y+40, app.sliderButton[0].x+20, app.sliderButton[0].y+40 + len(app.collectionButtons)*(spacing), fill = 'white', lineWidth = .5)
+    for i in range(len(app.collectionButtons)):
+        x1 = app.collectionButtons[i].x+75 + (app.collectionButtons[i].width)/10
+        x2 = app.collectionButtons[i].x+30 + (app.collectionButtons[i].width)/10
+        drawImage(app.imageStorage.meshIcon, x2, app.collectionButtons[i].y, width = app.imageStorage.meshIconSize[0]/1.3, height = app.imageStorage.meshIconSize[1]/1.3)
+        drawLabel(app.collectionButtons[i].name, x1, app.collectionButtons[i].y+11, fill = 'white', align = 'left')    
+        drawImage(app.imageStorage.vertex, x1 + len(app.collectionButtons[i].name)*8, app.collectionButtons[i].y, width = app.imageStorage.vertexSize[0]/1.35, height = app.imageStorage.vertexSize[1]/1.35)
+        if(app.selectedMeshIndex != None):
+            if( app.meshList[app.selectedMeshIndex].name == app.collectionButtons[i].name):
+                drawRect(app.collectionButtons[i].x, app.collectionButtons[i].y, app.collectionButtons[i].width, app.collectionButtons[i].height, fill = rgb(16, 42, 115), opacity = 30 )
 
 def drawDropDowns(app):
     for b in app.dropDownButtons:
@@ -175,7 +204,7 @@ def drawDropDowns(app):
             drawLabel(b.name, b.x+b.width/2, b.y+b.height/2, fill = 'white')
         if(b.drawDropDown):
             drawImage(b.dropDownImage, b.x, b.y + b.height, width = getImageSize(b.dropDownImage)[0]/1.3, height = getImageSize(b.dropDownImage)[1]/1.3 )
-            drawRect(b.x, b.y, b.width, b.height, fill = rgb(60, 81, 88), opacity = 30 )
+            drawRect(b.x, b.y, b.width, b.height, fill = rgb(16, 42, 115), opacity = 50 )
 
 
 def updateMoveScaleRotateButtons(app):

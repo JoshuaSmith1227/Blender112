@@ -241,18 +241,26 @@ def spawnNewMesh(app, meshName):
     if(meshName == 'plane'):
         app.selectedButton = None
         app.meshList.append( Mesh( chooseMesh('plane'), 'plane', app.camera, app.worldPivot) )
+        return True
     elif(meshName == 'cube'):
         app.selectedButton = None
         app.meshList.append(  Mesh( chooseMesh('cube'), 'cube', app.camera, app.worldPivot) )
+        return True
     elif(meshName == 'Circle'):
         pass
+        return True
     elif(meshName == 'UV Sphere'):
         pass
+        return True
     elif(meshName == 'Ice Sphere'):
         pass
+        return True
     elif(meshName == 'Cylinder'):
         app.selectedButton = None
         app.meshList.append(  Mesh( chooseMesh('cylindar'), 'cylindar', app.camera, app.worldPivot) )
+        return True
+    
+    return False
 
 
     

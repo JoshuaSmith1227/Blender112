@@ -89,6 +89,7 @@ def onAppStart(app):
 
 
 def onKeyHold(app, keys):
+    app.keys = []
     app.keys = keys
     vForward = vectorMultiply(app.camera.lookDir, .3)
     vRight = vectorMultiply(getNormalVector(app.camera.lookDir, app.camera.up), .3)
@@ -222,10 +223,14 @@ def controlButtonHovered(app, mx, my):
             app.hoveredButton = button
 
 def resetSliderDragState(app, mx, my):
+    app.sideButtons[10].isHovered = False
     for slider in app.sliderButton:
         slider.canDrag = False
 
 def sliderHovered(app, mx, my):
+    if(app.sideButtons[10].hovered(mx, my)):
+        app.sideButtons[10].isHovered = True
+        
     for slider in app.sliderButton:
         if( slider.hovered(mx, my) ):
             slider.canDrag = True
@@ -235,9 +240,13 @@ def dragSliders(app, mx, my):
         if(slid.canDrag):
             if(slid.control == 'left' or slid.control == 'right'):
                 if(slid == 'sidePannel'):
+                    app.sideButtons[10].x = app.initArrowPos - (app.mx - mx)
                     slider.updateAll(mx, None, slid.endPoint - mx, None)
                 slid.width = slid.endPoint - mx
                 slid.x = mx 
+                for i in range(len(app.collectionButtons)):
+                    app.collectionButtons[i].x = mx
+                    app.collectionButtons[i].width = slid.endPoint - mx
             elif(slid.control == 'top'):
                 slid.height = slid.endPoint - my
                 slid.y = my 
@@ -246,7 +255,7 @@ def selectMesh(app, mx, my):
     if ableToDeselect(app, mx, my):
         app.selectedMeshIndex = None
     for i in range( len(app.meshList) ):
-        if( selectedMesh(app, app.meshList[i], mx, my) ):
+        if( selectedMesh(app, app.meshList[i], mx, my) or app.selectedButton == app.meshList[i].name):
             app.selectedMeshIndex = i   
 
 def drawDropDownMenus(app, mx, my):
@@ -258,7 +267,7 @@ def getRidOfDropDownMenu(app, mx, my):
     for b in app.dropDownButtons:
         if(not b.dropDownHovered(mx, my) and b.drawDropDown):
             b.drawDropDown = False
-            app.controlButtons = app.nonDropDownButtons[:]
+            app.controlButtons = app.nonDropDownButtons[:] + app.collectionButtons
 
 def updateCollectionButtons(app):
     num = int(app.height/20)
@@ -266,7 +275,7 @@ def updateCollectionButtons(app):
     start = 1
     app.collectionButtons = []
     for i in range(len(app.meshList)):
-        app.collectionButtons.append( button(app.sliderButton[0].x, app.sliderButton[0].y + spacing*(i + start+1), app.sliderButton[0].width, spacing, f'{app.meshList[i].name}.00{i}'))
+        app.collectionButtons.append( button(app.sliderButton[0].x, app.sliderButton[0].y + spacing*(i + start+1), app.sliderButton[0].width, spacing, app.meshList[i].name))
 
     app.controlButtons = app.nonDropDownButtons[:] + app.collectionButtons
 
@@ -404,7 +413,9 @@ def changeView(app, button):
 
 
 def onMousePress(app, mx, my, button):
-    #updateCollectionButtons(app)
+    #print(app.meshList)
+    #print(app.collectionButtons)
+    app.initArrowPos = app.sideButtons[10].x
     sliderHovered(app, mx, my)
     app.drawDottedLine = False
     drawDropDownMenus(app, mx, my)
@@ -416,7 +427,8 @@ def onMousePress(app, mx, my, button):
     updateControls(app)       
     updateButtons(app, mx, my)
     moveScaleRotateHovered(app, mx, my)   
-    spawnNewMesh(app, app.selectedButton) 
+    if( spawnNewMesh(app, app.selectedButton) ):
+        updateCollectionButtons(app)
     changeView(app, app.selectedButton)
     
 
@@ -425,6 +437,7 @@ def onMouseDrag(app, mx, my, button):
     if(button[0] == 1):
         cameraMove(app, mx, my)  
     elif(button[0] == 0):
+        updateTransformPanel(app, mx, my)
         dragSliders(app, mx, my)
         sliderHovered(app, mx, my)
         updateControlButtonPos(app)
@@ -441,7 +454,7 @@ def onMouseRelease(app, mx, my):
     app.my = 0
 
 def onKeyRelease(app, key):
-    app.keys = []
+    pass
 
 def redrawAll(app):    
     drawRect(0, 0, app.width, app.height, fill = 'black')
@@ -469,10 +482,11 @@ def redrawAll(app):
         startPoint[1] += 1
         midpoint = point(startPoint, app.camera).getTransformedPoints()
         drawLine(app.movedMx, app.movedMy, midpoint[0], midpoint[1], dashes = True , arrowStart = True)
+
     drawSelectedAxisLines(app)
     drawSliderButtons(app)
-
-    drawLabel(' '.join(app.keys), 100, app.height-100, fill = 'white', size = 30)
+    drawTransformPanel(app)
+    drawLabel(f'Pressed:{' '.join(app.keys)}', 100, app.height-100, fill = 'white', size = 30)
     drawDropDowns(app)
     if(app.boxSelect):
         drawLine(app.mx, app.my, app.draggedMx, app.my, fill = 'white', dashes = True)
