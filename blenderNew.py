@@ -29,7 +29,7 @@ def onAppStart(app):
 
     app.meshSpawnPoint = [0, 0, 0]
     
-    app.testMesh = Mesh( chooseMesh('pyramid'), 'pyramid', app.camera, app.worldPivot)
+    app.testMesh = Mesh( chooseMesh('cube'), 'pyramid', app.camera, app.worldPivot)
     app.testMesh2 = Mesh( chooseMesh('pyramid'), 'pyramid', app.camera, app.worldPivot)
 
     app.testMesh.zTrans = 0
@@ -61,6 +61,12 @@ def onAppStart(app):
     app.outlinerMode = {
                 'Wireframe': False,
                 'Solid': True
+    }
+
+    app.vertexMode = {
+                'Vertex': False,
+                'Edge': False,
+                'Face': True
     }
 
     app.sidePannelX = 3*app.width/4
@@ -95,7 +101,10 @@ def onAppStart(app):
 
     app.numOfCollectionItems = 13
     app.copyedMesh = None
+    app.selectedface = []
+    app.selectedTris = []
     updateCollectionButtons(app)
+    updateEditButtons(app)
 
 
 def onKeyHold(app, keys):
@@ -124,12 +133,6 @@ def onKeyHold(app, keys):
     elif('e' in keys):
         app.camera.cameraPos[1] += .3
         app.camera.target[1] += .3
-
-    if('tab' in keys):
-        app.modeStates['Edit'] = True
-        app.modeStates['Object'] = False
-        app.modeStates['Sculpt'] = False
-        app.currentMode.url = getCurrentMode(app)
 
     if('`' in keys and app.selectedMeshIndex != None):
         app.worldPivot = vectorAdd(app.meshList[app.selectedMeshIndex].getMidpoint(), app.meshList[app.selectedMeshIndex].translateList)
@@ -278,8 +281,6 @@ def helpButtonPressed(app, mx, my):
 def controlButtonPressed(app, mx, my):   
     controlButtons = app.controlButtons[0:6]
     modeButtons = app.controlButtons[7:10]
-    #print(app.meshList)
-    #print(app.controlButtons[10:])
     
     for button in app.controlButtons:
         if(button.hovered(mx, my)):
@@ -297,6 +298,27 @@ def controlButtonPressed(app, mx, my):
                 app.meshList[MeshIndex].hidden = not app.meshList[MeshIndex].hidden
                 
             app.selectedButton = button
+
+    for button2 in app.editButtons:
+        if(button2.hovered(mx, my)):
+            for b in app.editButtons:
+                b.reset()
+            button2.switch()
+            app.selectedButton = button2
+
+    if( isinstance(app.selectedButton, Picture) ):
+        if(app.selectedButton.name == 'vertexEdit'):
+            app.vertexMode['Vertex'] = True
+            app.vertexMode['Edge'] = False
+            app.vertexMode['Face'] = False
+        elif(app.selectedButton.name == 'edgeEdit'):
+            app.vertexMode['Vertex'] = False
+            app.vertexMode['Edge'] = True
+            app.vertexMode['Face'] = False
+        elif(app.selectedButton.name == 'faceEdit'):
+            app.vertexMode['Vertex'] = False
+            app.vertexMode['Edge'] = False
+            app.vertexMode['Face'] = True
 
     if(app.selectedButton == 'Edit'):
         app.modeStates['Edit'] = True
@@ -325,6 +347,10 @@ def controlButtonPressed(app, mx, my):
 def controlButtonHovered(app, mx, my):
     app.hoveredButton = None
     for button in app.controlButtons:
+        if(button.hovered(mx, my)):
+            app.hoveredButton = button
+
+    for button in app.editButtons:
         if(button.hovered(mx, my)):
             app.hoveredButton = button
 
@@ -358,11 +384,12 @@ def dragSliders(app, mx, my):
                 slid.y = my 
 
 def selectMesh(app, mx, my):
+    sortedList = painterSort(app.meshList)
     if ableToDeselect(app, mx, my):
         app.selectedMeshIndex = None
     for i in range( len(app.meshList) ):
-        if(not app.meshList[i].hidden):
-            if( selectedMesh(app, app.meshList[i], mx, my) or app.selectedButton == app.meshList[i].name):
+        if(not sortedList[i].hidden):
+            if( selectedMesh(app, sortedList[i], mx, my) or app.selectedButton == sortedList[i].name):
                 app.selectedMeshIndex = i   
                 app.mostRecentMesh = i
 
@@ -386,8 +413,25 @@ def updateCollectionButtons(app):
     for i in range(len(app.meshList)):
         app.eyeButtons.append( Picture(app.imageStorage.eye, app.width-30, app.sliderButton[0].y + spacing*(i + start+1), app.imageStorage.eyeSize[0]/1.3, app.imageStorage.eyeSize[1]/1.3, app.imageStorage.closedEye, f'{app.meshList[i].name}.eye'))
         app.collectionButtons.append( button(app.sliderButton[0].x, app.sliderButton[0].y + spacing*(i + start+1), app.sliderButton[0].width, spacing, app.meshList[i].name))
-    print(app.collectionButtons + app.eyeButtons)
+
     app.controlButtons = app.nonDropDownButtons[:] + app.collectionButtons + app.eyeButtons
+
+def drawEditButtons(app):
+    if(app.modeStates['Edit']):
+        drawRect(60, 50, 70, 25, fill = rgb(35, 35, 35), opacity = 50)
+
+        for button in app.editButtons:
+            drawImage(button.url, button.x, button.y, width = button.width, height = button.height)
+
+def updateEditButtons(app):
+    vertexEdit = Picture(app.imageStorage.vertexEdit, 65, 50, app.imageStorage.vertexEditSize[0]/1.15, app.imageStorage.vertexEditSize[1]/1.15, app.imageStorage.vertEditS, 'vertexEdit') 
+    edgeEdit = Picture(app.imageStorage.edgeEdit, 85, 50, app.imageStorage.edgeEditSize[0]/1.15, app.imageStorage.edgeEditSize[1]/1.15, app.imageStorage.edgeEdits, 'edgeEdit') 
+    faceEdit = Picture(app.imageStorage.faceEdit, 105, 50, app.imageStorage.faceEditSize[0]/1.2, app.imageStorage.faceEditSize[1]/1.2, app.imageStorage.faceEdisS, 'faceEdit') 
+
+    if(app.modeStates['Edit']):
+        app.editButtons = [vertexEdit, edgeEdit, faceEdit]
+    else:
+        app.editButtons = []
 
 def moveScaleRotateHovered(app, mx, my):
     foundButton = False
@@ -413,15 +457,16 @@ def moveScaleRotateHovered(app, mx, my):
 def ableToDeselect(app, mx, my):
     if(moveScaleRotateHovered(app, mx, my) ):
         return False
-    
+    for b in app.editButtons:
+        if(b.hovered(mx, my)):
+            return False
     for b in app.controlButtons:
         if(b.hovered(mx, my)):
             return False
 
     return True
 
-def transformMoveScaleRotate(app, mx, my):
-    
+def transformMoveScaleRotate(app, mx, my):  
     if(app.move):
         if('x-axis' in app.selectedAxis):      
             app.meshList[app.selectedMeshIndex].xTrans = app.xTransInitial - (mx - app.mx)*.008*squareWave('cos', app.camera.yaw)
@@ -463,6 +508,26 @@ def initiazliseMoveScaleRotate(app):
         app.xScaleInitial = app.meshList[app.selectedMeshIndex].xScale
         app.yScaleInitial = app.meshList[app.selectedMeshIndex].yScale
         app.zScaleInitial = app.meshList[app.selectedMeshIndex].zScale
+
+def selectFace(app, mx, my):
+    if(app.selectedMeshIndex != None and app.modeStates['Edit']):
+        for face in app.meshList[app.selectedMeshIndex].faces:
+            f = set()
+            for tri in app.meshList[app.selectedMeshIndex].faces[face]:
+                ax, ay = tri.screenPoints[0], tri.screenPoints[1]
+                bx, by = tri.screenPoints[2], tri.screenPoints[3]
+                cx, cy = tri.screenPoints[4], tri.screenPoints[5]
+                f.add((ax, ay))
+                f.add((bx, by))
+                f.add((cx, cy))
+
+            finalFace = clockSort(sorted(f)) 
+            
+            if(pointInPolygon(finalFace, mx, my)):
+                app.selectedface = finalFace
+                app.selectedTris = app.meshList[app.selectedMeshIndex].faces[face]
+                
+                
 
 #========================================================
 #========================================================
@@ -524,6 +589,10 @@ def changeView(app, button):
 
 
 def onMousePress(app, mx, my, button):
+    if(app.vertexMode['Face']):
+        selectFace(app, mx, my)
+    if(app.selectedButton == 'Edit'):
+        updateEditButtons(app)
     app.drawHelp = False
     app.initArrowPos = app.sideButtons[10].x
     sliderHovered(app, mx, my)
@@ -575,19 +644,32 @@ def redrawAll(app):
     drawLabel(app.hoveredButton, 700, 120, fill = 'white')
     drawGrid(app)
     selected = None
+
+    sortedList = painterSort(app.meshList)
+    if(app.selectedMeshIndex != None and not app.outlinerMode['Wireframe'] and not sortedList[app.selectedMeshIndex].hidden):
+        drawOutline(app.meshList[app.selectedMeshIndex].getTransformedPoints()[1])
+        
     for i in range(len(app.meshList)):
-        if(not app.meshList[i].hidden):
-            draw3DShape(app, app.meshList[i], i)
+        if(not sortedList[i].hidden):
+            draw3DShape(app, sortedList[i], i)
         if(i == app.selectedMeshIndex):
-            selected = i
+            selected = i    
+        
+        
     if(selected != None):
         drawControl(app, selected)
+
     drawWorldOrigin()
     drawControlButtons(app)
     drawTransformPanel(app)
-    drawLabel('User Perspective', 70, 70, fill = 'white', align = 'left', size = 12)
+    
     if(app.mostRecentMesh != None):
-        drawLabel(f'(1) Scene Collection | {app.meshList[app.mostRecentMesh]}', 70, 90, fill = 'white', align = 'left', size = 12)
+        if(app.editButtons == []):
+            drawLabel('User Perspective', 70, 70, fill = 'white', align = 'left', size = 12)
+            drawLabel(f'(1) Scene Collection | {app.meshList[app.mostRecentMesh]}', 70, 90, fill = 'white', align = 'left', size = 12)
+        else:
+            drawLabel('User Perspective', 70, 105, fill = 'white', align = 'left', size = 12)
+            drawLabel(f'(1) Scene Collection | {app.meshList[app.mostRecentMesh]}', 70, 125, fill = 'white', align = 'left', size = 12)
 
     if(app.drawDottedLine):
         startPoint = vectorSubtract(app.meshList[app.selectedMeshIndex].translateList, app.meshList[app.selectedMeshIndex].rotationPoint)
@@ -598,6 +680,7 @@ def redrawAll(app):
     drawSelectedAxisLines(app)
     drawSliderButtons(app)
     drawLabel(f'{' '.join(app.keys)}', 100, app.height-100, fill = 'white', size = 30)
+    drawEditButtons(app)
     drawDropDowns(app)
     
     if(app.boxSelect):

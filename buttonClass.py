@@ -131,6 +131,7 @@ class DropDown(button):
 
         self.name = name
         self.buttonList = ButtonList
+        self.shifted = False
     
     def __repr__(self):
         if(self.url != None):

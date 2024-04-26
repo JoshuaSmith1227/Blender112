@@ -36,15 +36,16 @@ def draw3DShape(app, mesh, i):
     frontTris = mesh.getTransformedPoints()[0]
     hiddenTris = mesh.getTransformedPoints()[1]
 
-    if(i == app.selectedMeshIndex and app.outlinerMode['Solid']):
-        drawOutline(frontTris)
-
     if(len(frontTris) < 10 and app.outlinerMode['Solid']):
         for tri in range( len(hiddenTris) ):
             ax, ay = hiddenTris[tri].screenPoints[0], hiddenTris[tri].screenPoints[1]
             bx, by = hiddenTris[tri].screenPoints[2], hiddenTris[tri].screenPoints[3]
             cx, cy = hiddenTris[tri].screenPoints[4], hiddenTris[tri].screenPoints[5]
             drawPolygon(ax, ay, bx, by, cx, cy, fill = hiddenTris[tri].color, border = hiddenTris[tri].color, borderWidth = 1, opacity = 100) 
+            if(i == app.selectedMeshIndex and app.modeStates['Edit'] and app.vertexMode['Vertex']):
+                drawCircle(ax, ay, 2.5, fill = rgb(20, 20, 20))
+                drawCircle(bx, by, 2.5, fill = rgb(20, 20, 20))
+                drawCircle(cx, cy, 2.5, fill = rgb(20, 20, 20))
 
     if(app.outlinerMode['Solid']):
         for tri in range( len(frontTris) ):
@@ -52,19 +53,23 @@ def draw3DShape(app, mesh, i):
             bx, by = frontTris[tri].screenPoints[2], frontTris[tri].screenPoints[3]
             cx, cy = frontTris[tri].screenPoints[4], frontTris[tri].screenPoints[5]
 
-            drawPolygon(ax, ay, bx, by, cx, cy, fill = frontTris[tri].color, border = frontTris[tri].color, borderWidth = 1, opacity = 100)   
-            if(i == app.selectedMeshIndex and app.modeStates['Edit'] == True):
-                drawCircle(ax, ay, 2, fill = 'black')
-                drawCircle(bx, by, 2, fill = 'black')
-                drawCircle(cx, cy, 2, fill = 'black') 
+            #print((ax, ay), (ax, ay) in app.selectedface)
+            if((ax, ay) in app.selectedface and (bx, by) in app.selectedface and (cx, cy) in app.selectedface):
+                drawPolygon(ax, ay, bx, by, cx, cy, fill = 'orange', border = 'orange', borderWidth = 1, opacity = 100)
+                drawPolygon(ax, ay, bx, by, cx, cy, fill = frontTris[tri].color, border = frontTris[tri].color, borderWidth = 1, opacity = 30)    
+            else:
+                drawPolygon(ax, ay, bx, by, cx, cy, fill = frontTris[tri].color, border = frontTris[tri].color, borderWidth = 1, opacity = 100)   
+            
+            if(i == app.selectedMeshIndex and app.modeStates['Edit'] and app.vertexMode['Vertex']):
+                drawCircle(ax, ay, 2.5, fill = rgb(50, 50, 50))
+                drawCircle(bx, by, 2.5, fill = rgb(50, 50, 50))
+                drawCircle(cx, cy, 2.5, fill = rgb(50, 50, 50)) 
 
 
     elif(app.outlinerMode['Wireframe']):
         for face in mesh.faces:
             f = set()
-            i = 0
             for tri in mesh.faces[face]:
-                i+=1
                 ax, ay = tri.screenPoints[0], tri.screenPoints[1]
                 bx, by = tri.screenPoints[2], tri.screenPoints[3]
                 cx, cy = tri.screenPoints[4], tri.screenPoints[5]
@@ -73,12 +78,16 @@ def draw3DShape(app, mesh, i):
                 f.add((cx, cy))
 
             finalFace = tupleToList(clockSort(sorted(f)))
-            drawPolygon(*finalFace, fill = None, border = 'black', borderWidth = .75)
 
-        if(i == app.selectedMeshIndex and app.modeStates['Edit'] == True):
-            drawCircle(ax, ay, 2, fill = 'black')
-            drawCircle(bx, by, 2, fill = 'black')
-            drawCircle(cx, cy, 2, fill = 'black')
+            if(i == app.selectedMeshIndex):
+                drawPolygon(*finalFace, fill = None, border = 'orange', borderWidth = .75)
+            else:
+                drawPolygon(*finalFace, fill = None, border = rgb(20, 20, 20), borderWidth = .75)
+
+            if(i == app.selectedMeshIndex and app.modeStates['Edit'] and app.vertexMode['Vertex']):
+                drawCircle(ax, ay, 2.5, fill = rgb(20, 20, 20))
+                drawCircle(bx, by, 2.5, fill = rgb(20, 20, 20))
+                drawCircle(cx, cy, 2.5, fill = rgb(20, 20, 20))
 
                    
 
@@ -240,8 +249,10 @@ def drawWorldOrigin():
 
 def drawSelectedAxisLines(app):
     if(app.selectedMeshIndex != None and app.move):
+        
         startPoint = vectorSubtract(app.meshList[app.selectedMeshIndex].translateList, app.meshList[app.selectedMeshIndex].rotationPoint)
         startPoint[1] += 1
+
         if('x-axis' in app.selectedAxis):
             xLine = lineObject(vectorAdd([-20, 0, 0], startPoint), vectorAdd([20, 0, 0], startPoint), app.camera, app.worldPivot).getTransformedPoints()
             drawLinePoints(xLine[0], xLine[1], 'red', False, 1)
@@ -273,17 +284,23 @@ def spawnNewMesh(app, meshName):
         app.meshList.append(  Mesh( chooseMesh('cube'), 'cube', app.camera, app.worldPivot) )
         return True
     elif(meshName == 'Circle'):
-        pass
         return True
     elif(meshName == 'UV Sphere'):
-        pass
+        app.selectedButton = None
+        app.meshList.append(  Mesh( chooseMesh('sphere'), 'sphere', app.camera, app.worldPivot) )
         return True
     elif(meshName == 'Ice Sphere'):
-        pass
+        app.selectedButton = None
+        app.meshList.append(  Mesh( chooseMesh('sphere'), 'sphere', app.camera, app.worldPivot) )
         return True
     elif(meshName == 'Cylinder'):
         app.selectedButton = None
         app.meshList.append(  Mesh( chooseMesh('cylindar'), 'cylindar', app.camera, app.worldPivot) )
+        return True
+    elif(meshName == 'Monkey'):
+        app.selectedButton = None
+        print(chooseMesh('moneky'))
+        app.meshList.append(  Mesh( chooseMesh('monkey'), 'moneky', app.camera, app.worldPivot) )
         return True
     
     return False

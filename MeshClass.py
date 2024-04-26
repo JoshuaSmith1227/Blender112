@@ -49,6 +49,7 @@ class Mesh:
 
         self.hidden = False
         self.faces = dict()
+        self.transformedMidpoint = self.rotationPoint[2]
     
     def __repr__(self):
         return self.name
@@ -224,8 +225,15 @@ class Mesh:
             else:
                 self.hiddenTris.append(newTri)
 
+        self.transformedMidpoint = self.getTransformedMidpoint()
         self.frontTris = sortMeshData(self.frontTris)
         return (self.frontTris, self.hiddenTris)
+    
+    def getTransformedMidpoint(self):
+        avgZ = 0
+        for tri in self.frontTris:
+            avgZ += tri.avg
+        return avgZ/len(self.frontTris)
 
     def mutatePoint(self, tri):
         tri[0][0] += self.xTrans
@@ -377,9 +385,18 @@ class Triangle:
         self.color = color
         self.preProjectedTri = preProjectedTri
         self.avg = (self.preProjectedTri[0][2]+self.preProjectedTri[1][2]+self.preProjectedTri[2][2])/3
+        self.avgY = (self.preProjectedTri[0][1]+self.preProjectedTri[1][1]+self.preProjectedTri[2][1])/3
+        self.avgX = (self.preProjectedTri[0][0]+self.preProjectedTri[1][0]+self.preProjectedTri[2][0])/3
+        self.selected = False
            
     def __repr__(self):
         return f'Triangle: {self.avg}'
+
+class point2:
+    def __init__(self, screenPoints, origonalPoints):
+        self.screenPoints = screenPoints
+        self.origionalPoints = origonalPoints
+
 
 # ====================================================================
 # --------------------------------------------------------------------

@@ -95,6 +95,7 @@ def chooseMesh(s):
     elif(s == 'plane'):
         return Plane
     elif(s == 'monkey'):
+        print('monkey')
         return monkey
     elif(s == 'cylindar'):
         return cylindar
@@ -310,7 +311,8 @@ def getCurrentMode(app):
 def dist(x0, x1, y0, y1):
     return ((x0-x1)**2 + (y0-y1)**2)**.5
 
-
+def painterSort(meshes):
+    return sorted(meshes, key=lambda mesh: mesh.transformedMidpoint, reverse=True)
 
 def centroid(points):
     x = [p[0] for p in points]
