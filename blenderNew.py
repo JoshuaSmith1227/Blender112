@@ -134,6 +134,14 @@ def onKeyHold(app, keys):
         app.camera.cameraPos[1] += .3
         app.camera.target[1] += .3
 
+    if(app.selectedMeshIndex != None):
+        if('1' in keys):
+            app.meshList[app.selectedMeshIndex].xAngle += .1
+        if('2' in keys):
+            app.meshList[app.selectedMeshIndex].yAngle += .1
+        if('3' in keys):
+            app.meshList[app.selectedMeshIndex].zAngle += .1
+
     if('`' in keys and app.selectedMeshIndex != None):
         app.worldPivot = vectorAdd(app.meshList[app.selectedMeshIndex].getMidpoint(), app.meshList[app.selectedMeshIndex].translateList)
 
@@ -389,7 +397,7 @@ def selectMesh(app, mx, my):
         app.selectedMeshIndex = None
     for i in range( len(app.meshList) ):
         if(not sortedList[i].hidden):
-            if( selectedMesh(app, sortedList[i], mx, my) or app.selectedButton == sortedList[i].name):
+            if( selectedMesh(app, app.meshList[i], mx, my) or app.selectedButton == app.meshList[i].name):
                 app.selectedMeshIndex = i   
                 app.mostRecentMesh = i
 
