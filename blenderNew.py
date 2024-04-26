@@ -29,7 +29,7 @@ def onAppStart(app):
 
     app.meshSpawnPoint = [0, 0, 0]
     
-    app.testMesh = Mesh( chooseMesh('cube'), 'pyramid', app.camera, app.worldPivot)
+    app.testMesh = Mesh( chooseMesh('cube'), 'cube', app.camera, app.worldPivot)
     app.testMesh2 = Mesh( chooseMesh('pyramid'), 'pyramid', app.camera, app.worldPivot)
 
     app.testMesh.zTrans = 0
@@ -396,7 +396,7 @@ def selectMesh(app, mx, my):
     if ableToDeselect(app, mx, my):
         app.selectedMeshIndex = None
     for i in range( len(app.meshList) ):
-        if(not sortedList[i].hidden):
+        if(not app.meshList[i].hidden):
             if( selectedMesh(app, app.meshList[i], mx, my) or app.selectedButton == app.meshList[i].name):
                 app.selectedMeshIndex = i   
                 app.mostRecentMesh = i
@@ -597,6 +597,7 @@ def changeView(app, button):
 
 
 def onMousePress(app, mx, my, button):
+    app.meshList = painterSort(app.meshList)
     if(app.vertexMode['Face']):
         selectFace(app, mx, my)
     if(app.selectedButton == 'Edit'):

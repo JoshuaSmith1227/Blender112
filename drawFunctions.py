@@ -85,9 +85,10 @@ def draw3DShape(app, mesh, i):
                 drawPolygon(*finalFace, fill = None, border = rgb(20, 20, 20), borderWidth = .75)
 
             if(i == app.selectedMeshIndex and app.modeStates['Edit'] and app.vertexMode['Vertex']):
-                drawCircle(ax, ay, 2.5, fill = rgb(20, 20, 20))
-                drawCircle(bx, by, 2.5, fill = rgb(20, 20, 20))
-                drawCircle(cx, cy, 2.5, fill = rgb(20, 20, 20))
+                pass                
+                #drawCircle(ax, ay, 2.5, fill = rgb(20, 20, 20))
+                #drawCircle(bx, by, 2.5, fill = rgb(20, 20, 20))
+                #drawCircle(cx, cy, 2.5, fill = rgb(20, 20, 20))
 
                    
 
