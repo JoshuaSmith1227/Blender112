@@ -86,8 +86,11 @@ def onAppStart(app):
     app.grab = False
     app.showMeshWindow = False
     app.keys = []
+    app.drawHelp = False
 
     app.numOfCollectionItems = 13
+    app.copyedMesh = None
+    updateCollectionButtons(app)
 
 
 def onKeyHold(app, keys):
@@ -123,7 +126,7 @@ def onKeyHold(app, keys):
         app.modeStates['Sculpt'] = False
         app.currentMode.url = getCurrentMode(app)
 
-    if('`' in keys):
+    if('`' in keys and app.selectedMeshIndex != None):
         app.worldPivot = vectorAdd(app.meshList[app.selectedMeshIndex].getMidpoint(), app.meshList[app.selectedMeshIndex].translateList)
 
     if(app.selectedMeshIndex != None):
@@ -145,6 +148,7 @@ def onKeyHold(app, keys):
             app.selectedButton = 'selectedMove.png'
             app.keyPress = True
 
+
     if( app.selectedButton == 'SelectedScale.png' or app.selectedButton == 'selectedMove.png'):
         if('x' in keys):
             app.keyPress = True
@@ -158,6 +162,24 @@ def onKeyHold(app, keys):
             app.keyPress = True
             app.selectedAxis = ['z-axis']
             #app.drawDottedLine = True
+    elif('x' in keys and app.selectedMeshIndex != None):
+        app.mostRecentMesh = None
+        app.meshList.pop(app.selectedMeshIndex)
+        print(app.collectionButtons)
+        updateCollectionButtons(app)
+        app.selectedMeshIndex = None
+
+def onKeyPress(app, key): 
+    if('v' == key and app.copyedMesh != None):
+        copy = Mesh(app.copyedMesh.points, app.copyedMesh.name[:-4], app.camera, app.worldPivot)
+        copy.xScale = app.copyedMesh.xScale
+        copy.yScale = app.copyedMesh.yScale
+        copy.zScale = app.copyedMesh.zScale
+        app.meshList.append(copy)
+        updateCollectionButtons(app)
+    app.copyedMesh = None
+    if('c' == key and app.selectedMeshIndex != None):
+        app.copyedMesh = app.meshList[app.selectedMeshIndex]
 
 
 def cameraMove(app, mx, my):
@@ -205,13 +227,54 @@ def updateControls(app):
         app.scale = False
         app.boxSelect = True
 
+def helpButton(app):
+    drawCircle(355, 26.5, 10, fill = rgb(60, 60, 60))
+    drawLabel('?', 355, 26.5, fill = 'white')
+
+    if(app.drawHelp):
+        drawBetterRect(app, 355, 45, 400, 300, rgb(35, 35, 35), 5)
+        drawLabel('Camera Pan', 360, 55, align = 'left', fill = 'white')
+        drawLabel('Forward | Backword | Left | Right', 360, 55+30, align = 'left', fill = 'white' )
+        drawLabel('Up | Down', 360, 55+50, align = 'left', fill = 'white' )
+
+        drawLabel('Rescale', 360, 55+80, align = 'left', fill = 'white' )
+        drawLabel('Grab', 360, 55+100, align = 'left', fill = 'white' )
+
+        drawLabel('X-axis', 360, 55+130, align = 'left', fill = 'white' )
+        drawLabel('Y-axis', 360, 55+150, align = 'left', fill = 'white' )
+        drawLabel('Z-axis', 360, 55+170, align = 'left', fill = 'white' )
+
+        drawLabel('Update World Pivot', 360, 55+200, align = 'left', fill = 'white' )
+
+        drawLabel('Delete Mesh', 360, 55+230, align = 'left', fill = 'white')
+        drawLabel('Copy Mesh', 360, 55+250, align = 'left', fill = 'white')
+        drawLabel('Paste Mesh', 360, 55+270, align = 'left', fill = 'white')
+
+        drawLabel('Scroll Wheel', 310+400, 55, align = 'right', fill = 'white')
+        drawLabel('W | A | S | D', 310+400, 55+30, align = 'right', fill = 'white')
+        drawLabel('E | Q', 310+335, 55+50, align = 'left', fill = 'white')
+
+        drawLabel('R', 310+335, 55+80, align = 'left', fill = 'white')
+        drawLabel('G', 310+335, 55+100, align = 'left', fill = 'white')
+
+        drawLabel('X', 310+335, 55+130, align = 'left', fill = 'white')
+        drawLabel('Y', 310+335, 55+150, align = 'left', fill = 'white')
+        drawLabel('Z', 310+335, 55+170, align = 'left', fill = 'white')
+        drawLabel('`', 310+335, 55+200, align = 'left', fill = 'white')
+        drawLabel('X', 310+335, 55+230, align = 'left', fill = 'white')
+        drawLabel('C', 310+335, 55+250, align = 'left', fill = 'white')
+        drawLabel('V', 310+335, 55+270, align = 'left', fill = 'white')
+        
+
+def helpButtonPressed(app, mx, my):
+    if(10 >= dist(355, mx, 26.5, my)):
+        app.drawHelp = True
 
 def controlButtonPressed(app, mx, my):   
-    
     controlButtons = app.controlButtons[0:6]
     modeButtons = app.controlButtons[7:10]
-    print(app.meshList)
-    print(app.controlButtons[10:])
+    #print(app.meshList)
+    #print(app.controlButtons[10:])
     for button in app.controlButtons:
         if(button.hovered(mx, my)):
             if(isinstance(button, Picture)):               
@@ -295,7 +358,7 @@ def updateCollectionButtons(app):
     for i in range(len(app.meshList)):
         app.eyeButtons.append( Picture(app.imageStorage.eye, app.width-30, app.sliderButton[0].y + spacing*(i + start+1), app.imageStorage.eyeSize[0]/1.3, app.imageStorage.eyeSize[1]/1.3, app.imageStorage.closedEye, f'{app.meshList[i].name}.eye'))
         app.collectionButtons.append( button(app.sliderButton[0].x, app.sliderButton[0].y + spacing*(i + start+1), app.sliderButton[0].width, spacing, app.meshList[i].name))
-
+    print(app.collectionButtons + app.eyeButtons)
     app.controlButtons = app.nonDropDownButtons[:] + app.collectionButtons + app.eyeButtons
 
 def moveScaleRotateHovered(app, mx, my):
@@ -433,8 +496,10 @@ def changeView(app, button):
 
 
 def onMousePress(app, mx, my, button):
+    app.drawHelp = False
     app.initArrowPos = app.sideButtons[10].x
     sliderHovered(app, mx, my)
+    helpButtonPressed(app, mx, my)
     app.drawDottedLine = False
     drawDropDownMenus(app, mx, my)
     initializeCameraMove(app, mx, my)
@@ -476,7 +541,7 @@ def onKeyRelease(app, key):
 def redrawAll(app):    
     drawRect(0, 0, app.width, app.height, fill = 'black')
     drawBetterRect(app, 10, 20, app.sliderButton[0].x- 25, app.height-30, rgb(60, 60, 60), 8)
-
+    
     drawRect(0, 0, app.width, 50, fill = rgb(35, 35, 35), opacity = 50)
     drawLabel(app.selectedButton, 700, 100, fill = 'white')
     drawLabel(app.hoveredButton, 700, 120, fill = 'white')
@@ -489,12 +554,12 @@ def redrawAll(app):
             selected = i
     if(selected != None):
         drawControl(app, selected)
-
     drawWorldOrigin()
     drawControlButtons(app)
     drawTransformPanel(app)
     drawLabel('User Perspective', 70, 70, fill = 'white', align = 'left', size = 12)
-    drawLabel(f'(1) Scene Collection | {app.meshList[app.mostRecentMesh]}', 70, 90, fill = 'white', align = 'left', size = 12)
+    if(app.mostRecentMesh != None):
+        drawLabel(f'(1) Scene Collection | {app.meshList[app.mostRecentMesh]}', 70, 90, fill = 'white', align = 'left', size = 12)
 
     if(app.drawDottedLine):
         startPoint = vectorSubtract(app.meshList[app.selectedMeshIndex].translateList, app.meshList[app.selectedMeshIndex].rotationPoint)
@@ -514,6 +579,7 @@ def redrawAll(app):
         drawLine(app.mx, app.draggedMy, app.draggedMx, app.draggedMy, fill = 'white', dashes = True)
     drawControlDetails(app)    
     drawRotationGizmo(app)
+    helpButton(app)
 
 def onStep(app):
     makeGrid(app)
