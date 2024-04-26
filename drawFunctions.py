@@ -36,25 +36,51 @@ def draw3DShape(app, mesh, i):
     frontTris = mesh.getTransformedPoints()[0]
     hiddenTris = mesh.getTransformedPoints()[1]
 
-    if(i == app.selectedMeshIndex):
+    if(i == app.selectedMeshIndex and app.outlinerMode['Solid']):
         drawOutline(frontTris)
 
-    if(len(frontTris) < 10):
+    if(len(frontTris) < 10 and app.outlinerMode['Solid']):
         for tri in range( len(hiddenTris) ):
             ax, ay = hiddenTris[tri].screenPoints[0], hiddenTris[tri].screenPoints[1]
             bx, by = hiddenTris[tri].screenPoints[2], hiddenTris[tri].screenPoints[3]
             cx, cy = hiddenTris[tri].screenPoints[4], hiddenTris[tri].screenPoints[5]
             drawPolygon(ax, ay, bx, by, cx, cy, fill = hiddenTris[tri].color, border = hiddenTris[tri].color, borderWidth = 1, opacity = 100) 
 
-    for tri in range( len(frontTris) ):
-        ax, ay = frontTris[tri].screenPoints[0], frontTris[tri].screenPoints[1]
-        bx, by = frontTris[tri].screenPoints[2], frontTris[tri].screenPoints[3]
-        cx, cy = frontTris[tri].screenPoints[4], frontTris[tri].screenPoints[5]
-        drawPolygon(ax, ay, bx, by, cx, cy, fill = frontTris[tri].color, border = frontTris[tri].color, borderWidth = 1, opacity = 100)    
-        
-        #drawCircle(ax, ay, .9, fill = 'gray')
-        #drawCircle(bx, by, .9, fill = 'gray')
-        #drawCircle(cx, cy, .9, fill = 'gray')
+    if(app.outlinerMode['Solid']):
+        for tri in range( len(frontTris) ):
+            ax, ay = frontTris[tri].screenPoints[0], frontTris[tri].screenPoints[1]
+            bx, by = frontTris[tri].screenPoints[2], frontTris[tri].screenPoints[3]
+            cx, cy = frontTris[tri].screenPoints[4], frontTris[tri].screenPoints[5]
+
+            drawPolygon(ax, ay, bx, by, cx, cy, fill = frontTris[tri].color, border = frontTris[tri].color, borderWidth = 1, opacity = 100)   
+            if(i == app.selectedMeshIndex and app.modeStates['Edit'] == True):
+                drawCircle(ax, ay, 2, fill = 'black')
+                drawCircle(bx, by, 2, fill = 'black')
+                drawCircle(cx, cy, 2, fill = 'black') 
+
+
+    elif(app.outlinerMode['Wireframe']):
+        for face in mesh.faces:
+            f = set()
+            i = 0
+            for tri in mesh.faces[face]:
+                i+=1
+                ax, ay = tri.screenPoints[0], tri.screenPoints[1]
+                bx, by = tri.screenPoints[2], tri.screenPoints[3]
+                cx, cy = tri.screenPoints[4], tri.screenPoints[5]
+                f.add((ax, ay))
+                f.add((bx, by))
+                f.add((cx, cy))
+
+            finalFace = tupleToList(clockSort(sorted(f)))
+            drawPolygon(*finalFace, fill = None, border = 'black', borderWidth = .75)
+
+        if(i == app.selectedMeshIndex and app.modeStates['Edit'] == True):
+            drawCircle(ax, ay, 2, fill = 'black')
+            drawCircle(bx, by, 2, fill = 'black')
+            drawCircle(cx, cy, 2, fill = 'black')
+
+                   
 
 
 def getMoveScaleRotatePoints(app, i):

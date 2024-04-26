@@ -305,7 +305,24 @@ def getCurrentMode(app):
         elif(app.modeStates[e] and e == 'Edit'):
             return app.imageStorage.editModeIcon
         elif(app.modeStates[e] and e == 'Sculpt'):
-            return app.imageStorage.scluptModeIcon
+            return app.imageStorage.sculptModeIcon
         
 def dist(x0, x1, y0, y1):
     return ((x0-x1)**2 + (y0-y1)**2)**.5
+
+
+
+def centroid(points):
+    x = [p[0] for p in points]
+    y = [p[1] for p in points]
+    return sum(x) / len(points), sum(y) / len(points)
+
+def clockSort(points):
+    center = centroid(points)
+    
+    def angle_from_center(point):
+        return math.atan2(point[1] - center[1], point[0] - center[0])
+    
+    sorted_points = sorted(points, key=angle_from_center)
+    return sorted_points
+

@@ -115,14 +115,14 @@ def getControlButtons(app):
 
 def getDropDownButtons(app):
     modeButtonList = ['Object', 'Edit', 'Sculpt']
-    editorMode = DropDown(getCurrentMode(app), 60, 20, app.imageStorage.objectModeSize[0]/1.3, app.imageStorage.objectModeSize[1]/1.3, app.imageStorage.objectEditSculpt, modeButtonList)
+    app.editorMode = DropDown(getCurrentMode(app), 60, 20, app.imageStorage.objectModeSize[0]/1.3, app.imageStorage.objectModeSize[1]/1.3, app.imageStorage.objectEditSculpt, modeButtonList)
     MeshButtonList = ['Plane', 'cube', 'circle', 'UV Sphere', 'Ice Sphere', 'Cylinder', 'Cone', 'Torus', 'Grid', 'Monkey']
     addMesh = DropDown(None, 300, 20, 30, 15, app.imageStorage.meshSelect, MeshButtonList, 'Add')
     viewButtonList = ['Camera', 'Top', 'Bottom', 'Front', 'Back', 'Right', 'Left']
     view = DropDown(None, 250, 20, 30, 15, app.imageStorage.view, viewButtonList, 'view')
     selectButtonList = ['All', 'None', 'Invert', 'Box Select', 'Circle Select']
     select = DropDown(None, 200, 20, 35, 15, app.imageStorage.select, selectButtonList, 'select')
-    return [editorMode, addMesh, view, select]
+    return [app.editorMode, addMesh, view, select]
 
 
 def updateControlButtonPos(app):

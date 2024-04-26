@@ -58,6 +58,11 @@ def onAppStart(app):
                 'Edit': False,
                 'Sculpt': False,
                     }
+    app.outlinerMode = {
+                'Wireframe': False,
+                'Solid': True
+    }
+
     app.sidePannelX = 3*app.width/4
 
     app.eyeButtons = []
@@ -275,6 +280,7 @@ def controlButtonPressed(app, mx, my):
     modeButtons = app.controlButtons[7:10]
     #print(app.meshList)
     #print(app.controlButtons[10:])
+    
     for button in app.controlButtons:
         if(button.hovered(mx, my)):
             if(isinstance(button, Picture)):               
@@ -290,8 +296,30 @@ def controlButtonPressed(app, mx, my):
                 MeshIndex = app.meshList.index(meshName)
                 app.meshList[MeshIndex].hidden = not app.meshList[MeshIndex].hidden
                 
-                    
             app.selectedButton = button
+
+    if(app.selectedButton == 'Edit'):
+        app.modeStates['Edit'] = True
+        app.modeStates['Object'] = False
+        app.modeStates['Sculpt'] = False
+        app.editorMode.url = getCurrentMode(app)       
+    elif(app.selectedButton == 'Object'):
+        app.modeStates['Edit'] = False
+        app.modeStates['Object'] = True
+        app.modeStates['Sculpt'] = False
+        app.editorMode.url = getCurrentMode(app)
+    elif(app.selectedButton == 'Sculpt'):
+        app.modeStates['Edit'] = False
+        app.modeStates['Object'] = False
+        app.modeStates['Sculpt'] = True
+        app.editorMode.url = getCurrentMode(app)
+
+    if(app.selectedButton == 'WireframeSelected.png'):
+        app.outlinerMode['Wireframe'] = True
+        app.outlinerMode['Solid'] = False
+    elif(app.selectedButton == 'solidSelected2.png'):
+        app.outlinerMode['Wireframe'] = False
+        app.outlinerMode['Solid'] = True
             
 
 def controlButtonHovered(app, mx, my):

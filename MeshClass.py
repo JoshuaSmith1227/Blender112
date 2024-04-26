@@ -6,6 +6,7 @@ from otherFunctions import*
 
 class Mesh:
     meshCounts = dict()
+    meshFaces = dict()
     def __init__(self, points, name, camera, worldPivot):
         self.normalizePoints = [[0, 0, 0, 0] for i in range(4)]
         self.normalizeRotationX = [[0, 0, 0, 0] for i in range(4)]
@@ -47,6 +48,7 @@ class Mesh:
         self.initializeTransforms()
 
         self.hidden = False
+        self.faces = dict()
     
     def __repr__(self):
         return self.name
@@ -56,6 +58,13 @@ class Mesh:
     
     def translate(self, point, x, y, z):
         return [point[0] + x, point[1] + y, point[2] + z]
+
+    def addFace(self, tri):
+        normVector = pythonRound(tri.normalVector, 4)
+        if(normVector not in self.faces):
+            self.faces[normVector] = [tri]
+        else:
+            self.faces[normVector].append(tri)
 
     def getMidpoint(self):
         avgX = 0
@@ -73,6 +82,7 @@ class Mesh:
     def getTransformedPoints(self):
         self.frontTris = []
         self.hiddenTris = []
+        self.faces = dict()
 
         for triangle in self.points:
             xT = 0
@@ -207,11 +217,13 @@ class Mesh:
             dotProd = dotProduct(app.cameraVector, normalUnitVector, translatedTri[0])
             newTri = Triangle((ax, ay, bx, by, cx, cy), triangle, dotProd, rgb(150*grayScale, 150*grayScale, 150*grayScale), translatedTri )
 
+            self.addFace(newTri)
+
             if(dotProd <= 0):    
                 self.frontTris.append(newTri)
             else:
                 self.hiddenTris.append(newTri)
-        
+
         self.frontTris = sortMeshData(self.frontTris)
         return (self.frontTris, self.hiddenTris)
 
@@ -357,6 +369,7 @@ class point:
 #===================================================================
 
 class Triangle:
+
     def __init__(self, screenPoints, origionalPoints, normalVector, color, preProjectedTri):
         self.screenPoints = screenPoints
         self.origionalPoints = origionalPoints
@@ -364,7 +377,7 @@ class Triangle:
         self.color = color
         self.preProjectedTri = preProjectedTri
         self.avg = (self.preProjectedTri[0][2]+self.preProjectedTri[1][2]+self.preProjectedTri[2][2])/3
-    
+           
     def __repr__(self):
         return f'Triangle: {self.avg}'
 
