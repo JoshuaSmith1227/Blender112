@@ -156,8 +156,8 @@ def drawRotationGizmo(app):
         for l in lineList:
             line = l.getTransformedPoints()
             
-            line[0][0] += app.sliderButton[0].x - 60
-            line[1][0] += app.sliderButton[0].x - 60
+            line[0][0] += app.sideButtons[10].x - 50
+            line[1][0] += app.sideButtons[10].x - 50
             line[0][1] += 110
             line[1][1] += 110
 

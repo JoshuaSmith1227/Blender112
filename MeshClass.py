@@ -45,6 +45,8 @@ class Mesh:
                 
         self.initializeConstants()
         self.initializeTransforms()
+
+        self.hidden = False
     
     def __repr__(self):
         return self.name

@@ -86,6 +86,11 @@ class imageStorage:
         self.arrow = "C:\\Users\\Owner\\Downloads\\blenderIcons\\arrow.png"
         self.arrowSize = getImageSize(self.arrow)
 
+        self.eye = "C:\\Users\\Owner\\Downloads\\blenderIcons\\open Eye.png"
+        self.eyeSize = getImageSize(self.eye)
+        self.closedEye = "C:\\Users\\Owner\\Downloads\\blenderIcons\\closed Eye.png"
+        self.closedEyeSize = getImageSize(self.closedEye)
+
 
 
 def getControlButtons(app):
@@ -139,14 +144,40 @@ def updateTransformPanel(app, mx, my):
     if(arrow.isHovered):
         if(mx <= app.sliderButton[0].x-20):
             arrow.x = mx
+            arrow.open = True
         else:
-            arrow.x = app.sliderButton[0].x - 25
+            arrow.x = app.sliderButton[0].x - 20
 
+    if(not arrow.open):
+        arrow.x = app.sliderButton[0].x - 20
+
+    if(app.sliderButton[0].x - (arrow.x+arrow.width) - 25 < 0):
+        arrow.open = False
+        arrow.x = app.sliderButton[0].x - 20
 
 def drawTransformPanel(app):
     arrow = app.sideButtons[10]
-    if(app.sliderButton[0].x - (arrow.x+arrow.width) - 25 > 0):
-        drawBetterRect(app, arrow.x+arrow.width, arrow.y, app.sliderButton[0].x - arrow.x - 20, 50, rgb(45, 45, 45), 3)
+    if(app.sliderButton[0].x - (arrow.x+arrow.width) - 20 > 0 and arrow.open):
+        drawBetterRect(app, arrow.x+arrow.width, arrow.y, app.sliderButton[0].x - arrow.x - 10, 330, rgb(55, 55, 55), 3)
+        drawLabel('Transform', arrow.x +25, arrow.y+10, fill = 'white', align = 'left')
+
+        start = [arrow.y+60, arrow.y+ 150, arrow.y + 240]
+        axis = ['X', 'Y', 'Z']
+        mesh = app.meshList[app.mostRecentMesh]
+        labels = ['Location:', 'Rotation', 'Scale:']
+        units = ['m', '°', '']
+        transforms = [[mesh.xTrans, mesh.yTrans, mesh.zTrans], [rTod(mesh.xAngle)%360, rTod(mesh.yAngle)%360, rTod(mesh.zAngle)%360], [mesh.xScale, mesh.yScale, mesh.zScale]]
+        for j in range(len(start)):
+            drawLabel(labels[j], arrow.x+25, start[j]-13, align = 'left', fill = 'white')
+            for i in range(3):   
+                height = 23
+                width = (app.sliderButton[0].x - (arrow.x + arrow.width))/1.2
+                drawRect(arrow.x+25, start[j] + height*i, width, height-2, fill = rgb(70, 70, 70))
+                drawLabel(axis[i], arrow.x + 30, start[j] + height*i+10, fill = 'white', align = 'left')
+                drawLabel(f'{pythonRound(transforms[j][i], 2)} {units[j]}', arrow.x + width+18, start[j] + height*i+10, fill = 'white', align = 'right')
+                
+def rTod(angle):
+    return (angle*360)/(math.pi*2)    
 
 def updateButtons(app, mx, my):
     ddButtons = None
@@ -186,8 +217,12 @@ def drawSliderButtons(app):
     drawLabel('Scene Collection', app.sliderButton[0].x+45, app.sliderButton[0].y+28, align = 'left', fill = 'white') 
     drawLine(app.sliderButton[0].x+20, app.sliderButton[0].y+40, app.sliderButton[0].x+20, app.sliderButton[0].y+40 + len(app.collectionButtons)*(spacing), fill = 'white', lineWidth = .5)
     for i in range(len(app.collectionButtons)):
-        x1 = app.collectionButtons[i].x+75 + (app.collectionButtons[i].width)/10
-        x2 = app.collectionButtons[i].x+30 + (app.collectionButtons[i].width)/10
+        x1 = app.collectionButtons[i].x+75 + (app.collectionButtons[i].width)/20
+        x2 = app.collectionButtons[i].x+30 + (app.collectionButtons[i].width)/20
+
+        eye = app.eyeButtons[i]
+        drawImage(eye.url, eye.x, eye.y, width = eye.width, height = eye.height)
+
         drawImage(app.imageStorage.meshIcon, x2, app.collectionButtons[i].y, width = app.imageStorage.meshIconSize[0]/1.3, height = app.imageStorage.meshIconSize[1]/1.3)
         drawLabel(app.collectionButtons[i].name, x1, app.collectionButtons[i].y+11, fill = 'white', align = 'left')    
         drawImage(app.imageStorage.vertex, x1 + len(app.collectionButtons[i].name)*8, app.collectionButtons[i].y, width = app.imageStorage.vertexSize[0]/1.35, height = app.imageStorage.vertexSize[1]/1.35)

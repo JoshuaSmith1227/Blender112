@@ -45,6 +45,7 @@ def onAppStart(app):
     app.meshList = [app.testMesh]
 
     app.selectedMeshIndex = 0
+    app.mostRecentMesh = 0
     app.lines = []
 
     app.scale = False
@@ -59,6 +60,7 @@ def onAppStart(app):
                     }
     app.sidePannelX = 3*app.width/4
 
+    app.eyeButtons = []
     app.collectionButtons = []
     app.sideButtons = getControlButtons(app)
     app.dropDownButtons = getDropDownButtons(app)
@@ -205,15 +207,28 @@ def updateControls(app):
 
 
 def controlButtonPressed(app, mx, my):   
+    
+    controlButtons = app.controlButtons[0:6]
+    modeButtons = app.controlButtons[7:10]
+    print(app.meshList)
+    print(app.controlButtons[10:])
     for button in app.controlButtons:
         if(button.hovered(mx, my)):
-            if(isinstance(button, Picture)):
-                button.url = button.ogPressed
+            if(isinstance(button, Picture)):               
+                if(button in controlButtons):
+                    for b in controlButtons:
+                        b.reset()
+                if(button in modeButtons):
+                    for b in modeButtons:
+                        b.reset()             
+                button.switch()  
+            if(button.name != None and button.name[-3:] == 'eye'):
+                meshName = button.name[:-4]
+                MeshIndex = app.meshList.index(meshName)
+                app.meshList[MeshIndex].hidden = not app.meshList[MeshIndex].hidden
+                
+                    
             app.selectedButton = button
-        else:
-            if(15 <= mx <= 54 and 25+40 <= my <= 236+40):
-                if(isinstance(button, Picture)):
-                    button.url = button.ogURL
             
 
 def controlButtonHovered(app, mx, my):
@@ -239,11 +254,11 @@ def dragSliders(app, mx, my):
     for slid in app.sliderButton:
         if(slid.canDrag):
             if(slid.control == 'left' or slid.control == 'right'):
-                if(slid == 'sidePannel'):
-                    app.sideButtons[10].x = app.initArrowPos - (app.mx - mx)
-                    slider.updateAll(mx, None, slid.endPoint - mx, None)
                 slid.width = slid.endPoint - mx
                 slid.x = mx 
+                if(slid == 'sidePannel'):
+                    slider.updateAll(mx, None, slid.endPoint - mx, None)
+                
                 for i in range(len(app.collectionButtons)):
                     app.collectionButtons[i].x = mx
                     app.collectionButtons[i].width = slid.endPoint - mx
@@ -255,8 +270,10 @@ def selectMesh(app, mx, my):
     if ableToDeselect(app, mx, my):
         app.selectedMeshIndex = None
     for i in range( len(app.meshList) ):
-        if( selectedMesh(app, app.meshList[i], mx, my) or app.selectedButton == app.meshList[i].name):
-            app.selectedMeshIndex = i   
+        if(not app.meshList[i].hidden):
+            if( selectedMesh(app, app.meshList[i], mx, my) or app.selectedButton == app.meshList[i].name):
+                app.selectedMeshIndex = i   
+                app.mostRecentMesh = i
 
 def drawDropDownMenus(app, mx, my):
     for b in app.dropDownButtons:
@@ -267,17 +284,19 @@ def getRidOfDropDownMenu(app, mx, my):
     for b in app.dropDownButtons:
         if(not b.dropDownHovered(mx, my) and b.drawDropDown):
             b.drawDropDown = False
-            app.controlButtons = app.nonDropDownButtons[:] + app.collectionButtons
+            app.controlButtons = app.nonDropDownButtons[:] + app.collectionButtons + app.eyeButtons
 
 def updateCollectionButtons(app):
     num = int(app.height/20)
     spacing = app.height/num
     start = 1
     app.collectionButtons = []
+    app.eyeButtons = []
     for i in range(len(app.meshList)):
+        app.eyeButtons.append( Picture(app.imageStorage.eye, app.width-30, app.sliderButton[0].y + spacing*(i + start+1), app.imageStorage.eyeSize[0]/1.3, app.imageStorage.eyeSize[1]/1.3, app.imageStorage.closedEye, f'{app.meshList[i].name}.eye'))
         app.collectionButtons.append( button(app.sliderButton[0].x, app.sliderButton[0].y + spacing*(i + start+1), app.sliderButton[0].width, spacing, app.meshList[i].name))
 
-    app.controlButtons = app.nonDropDownButtons[:] + app.collectionButtons
+    app.controlButtons = app.nonDropDownButtons[:] + app.collectionButtons + app.eyeButtons
 
 def moveScaleRotateHovered(app, mx, my):
     foundButton = False
@@ -323,9 +342,10 @@ def transformMoveScaleRotate(app, mx, my):
         if('x-axis' in app.selectedAxis and 'y-axis' in app.selectedAxis and 'z-axis' in app.selectedAxis):
             startPoint = vectorSubtract(app.meshList[app.selectedMeshIndex].translateList, app.meshList[app.selectedMeshIndex].rotationPoint)
             startPoint[1] += 1
-            app.meshList[app.selectedMeshIndex].xScale = abs(app.xScaleInitial + (mx - app.mx)*.008)
-            app.meshList[app.selectedMeshIndex].yScale = abs(app.yScaleInitial + (mx - app.mx)*.008)
-            app.meshList[app.selectedMeshIndex].zScale = abs(app.zScaleInitial + (mx - app.mx)*.008)
+            u = vectorMultiply( convertToUnitVector([app.xScaleInitial, app.yScaleInitial, app.zScaleInitial]), .05)
+            app.meshList[app.selectedMeshIndex].xScale = abs(app.xScaleInitial + (mx - app.mx)*u[0])
+            app.meshList[app.selectedMeshIndex].yScale = abs(app.yScaleInitial + (mx - app.mx)*u[1])
+            app.meshList[app.selectedMeshIndex].zScale = abs(app.zScaleInitial + (mx - app.mx)*u[2])
         if('x-axis' in app.selectedAxis and len(app.selectedAxis) != 3):      
             app.meshList[app.selectedMeshIndex].xScale = abs(app.xScaleInitial + (mx - app.mx)*.008 *squareWave('cos', app.camera.yaw)*-1)
             if(app.meshList[app.selectedMeshIndex].xScale < .1):
@@ -413,8 +433,6 @@ def changeView(app, button):
 
 
 def onMousePress(app, mx, my, button):
-    #print(app.meshList)
-    #print(app.collectionButtons)
     app.initArrowPos = app.sideButtons[10].x
     sliderHovered(app, mx, my)
     app.drawDottedLine = False
@@ -432,14 +450,13 @@ def onMousePress(app, mx, my, button):
     changeView(app, app.selectedButton)
     
 
-
 def onMouseDrag(app, mx, my, button):
     if(button[0] == 1):
         cameraMove(app, mx, my)  
     elif(button[0] == 0):
-        updateTransformPanel(app, mx, my)
         dragSliders(app, mx, my)
         sliderHovered(app, mx, my)
+        updateTransformPanel(app, mx, my)
         updateControlButtonPos(app)
         app.draggedMx = mx
         app.draggedMy = my
@@ -466,7 +483,8 @@ def redrawAll(app):
     drawGrid(app)
     selected = None
     for i in range(len(app.meshList)):
-        draw3DShape(app, app.meshList[i], i)
+        if(not app.meshList[i].hidden):
+            draw3DShape(app, app.meshList[i], i)
         if(i == app.selectedMeshIndex):
             selected = i
     if(selected != None):
@@ -474,9 +492,10 @@ def redrawAll(app):
 
     drawWorldOrigin()
     drawControlButtons(app)
-    
+    drawTransformPanel(app)
     drawLabel('User Perspective', 70, 70, fill = 'white', align = 'left', size = 12)
-    drawLabel('(1) Scene Collection | Cube', 70, 90, fill = 'white', align = 'left', size = 12)
+    drawLabel(f'(1) Scene Collection | {app.meshList[app.mostRecentMesh]}', 70, 90, fill = 'white', align = 'left', size = 12)
+
     if(app.drawDottedLine):
         startPoint = vectorSubtract(app.meshList[app.selectedMeshIndex].translateList, app.meshList[app.selectedMeshIndex].rotationPoint)
         startPoint[1] += 1
@@ -485,9 +504,9 @@ def redrawAll(app):
 
     drawSelectedAxisLines(app)
     drawSliderButtons(app)
-    drawTransformPanel(app)
-    drawLabel(f'Pressed:{' '.join(app.keys)}', 100, app.height-100, fill = 'white', size = 30)
+    drawLabel(f'{' '.join(app.keys)}', 100, app.height-100, fill = 'white', size = 30)
     drawDropDowns(app)
+    
     if(app.boxSelect):
         drawLine(app.mx, app.my, app.draggedMx, app.my, fill = 'white', dashes = True)
         drawLine(app.mx, app.my, app.mx, app.draggedMy, fill = 'white', dashes = True)
@@ -497,7 +516,6 @@ def redrawAll(app):
     drawRotationGizmo(app)
 
 def onStep(app):
-    #print(len(app.controlButtons))
     makeGrid(app)
     if(app.selectedMeshIndex != None):
         app.meshList[app.selectedMeshIndex].initializeTransforms()

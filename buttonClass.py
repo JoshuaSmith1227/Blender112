@@ -8,6 +8,8 @@ class button:
         self.height = height
         self.isHovered = False
         self.name = name
+
+        self.open = False
     
     def __repr__(self):
         return f'{self.name}'
@@ -85,22 +87,31 @@ class searchBar(button):
 #===================================================================================       
 
 class Picture(button):
-    def __init__(self, url, x, y, width, height, pressedURL):
+    def __init__(self, url, x, y, width, height, pressedURL, name = None):
         super().__init__(x, y, width, height)
         self.url = url
         self.pressedURL = pressedURL
 
         self.ogURL = url
         self.ogPressed = pressedURL
+        self.name = name
 
     def __repr__(self):
-        return f'{self.url[38:]}'
+        if(self.name == None):
+            return f'{self.url[38:]}'
+        return self.name
 
     def __eq__(self, other):
         if(self.url[38:] == other):
             return True
         return False
 
+    def reset(self):
+        self.url, self.pressedURL = self.ogURL, self.ogPressed
+    
+    def toggled(self):
+        return self.url != self.ogURL
+    
     def switch(self):
         self.url, self.pressedURL = self.pressedURL, self.url
 
